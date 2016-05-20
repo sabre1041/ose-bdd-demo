@@ -232,7 +232,7 @@
           <memberRepository>fs-public</memberRepository>
           <memberRepository>jboss-ea</memberRepository>
           <memberRepository>jboss-public</memberRepository>
-          <memberRepository>jboss-tech-preview</memberRepository>
+          <memberRepository>jboss-ga</memberRepository>
           <memberRepository>jenkins</memberRepository>
           <memberRepository>vaadin-addons</memberRepository>
         </memberRepositories>
@@ -271,7 +271,7 @@
     </repository>
     <repository>
       <id>jboss-ea</id>
-      <name>JBoss Early Availability</name>
+      <name>JBoss Early Access</name>
       <providerRole>org.sonatype.nexus.proxy.repository.Repository</providerRole>
       <providerHint>maven2</providerHint>
       <localStatus>IN_SERVICE</localStatus>
@@ -287,7 +287,7 @@
         <provider>file</provider>
       </localStorage>
       <remoteStorage>
-        <url>http://repository.jboss.org/nexus/content/groups/ea/</url>
+        <url>https://maven.repository.redhat.com/earlyaccess/all/</url>
       </remoteStorage>
       <externalConfiguration>
         <repositoryPolicy>RELEASE</repositoryPolicy>
@@ -332,8 +332,8 @@
       </externalConfiguration>
     </repository>
     <repository>
-      <id>jboss-tech-preview</id>
-      <name>JBoss Tech Preview</name>
+      <id>jboss-ga</id>
+      <name>JBoss GA</name>
       <providerRole>org.sonatype.nexus.proxy.repository.Repository</providerRole>
       <providerHint>maven2</providerHint>
       <localStatus>IN_SERVICE</localStatus>
@@ -349,7 +349,7 @@
         <provider>file</provider>
       </localStorage>
       <remoteStorage>
-        <url>http://maven.repository.redhat.com/techpreview/all/</url>
+        <url>https://maven.repository.redhat.com/ga/</url>
       </remoteStorage>
       <externalConfiguration>
         <repositoryPolicy>RELEASE</repositoryPolicy>
