@@ -2,6 +2,8 @@ node {
     
     def WORKSPACE = pwd()
     def mvnHome = tool 'maven'
+    def token = readFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
+    
    
    stage 'Checkout'
 
@@ -10,7 +12,7 @@ node {
    stage 'Maven Build'
    
         try {
-            sh "cd projects/brms-coolstore-demo && ${mvnHome}/bin/mvn -Dmaven.test.failure.ignore clean install"
+            sh "set +x && cd projects/brms-coolstore-demo && ${mvnHome}/bin/mvn -Dmaven.test.failure.ignore clean install"
    
             step([$class: 'ArtifactArchiver', artifacts: '**/target/*.war', fingerprint: true])
         }
@@ -25,21 +27,25 @@ node {
     stage 'OpenShift Build'
       
         try {
-            // Download support scripts
-            sh "mkdir -p ${WORKSPACE}/build-tools && curl -s -o ${WORKSPACE}/build-tools/ose-build-monitor.sh https://raw.githubusercontent.com/sabre1041/ose3-samples/master/trigger-monitor-build.sh && chmod +x ${WORKSPACE}/build-tools/ose-build-monitor.sh && curl -s -o ${WORKSPACE}/build-tools/ose-deploy-monitor.sh https://raw.githubusercontent.com/sabre1041/ose3-samples/master/verify-deploy.sh && chmod +x ${WORKSPACE}/build-tools/ose-deploy-monitor.sh"
-   
-            withCredentials([[$class: 'StringBinding',
-                credentialsId: 'bdd-ose-token', variable: 'OSE_TOKEN']]) {
-                
-                    sh """
-                
-                        ${WORKSPACE}/build-tools/ose-build-monitor.sh -h=${OPENSHIFT_HOST} -t=${env.OSE_TOKEN} -n=${OPENSHIFT_SOURCE_PROJECT} -a=${OPENSHIFT_SOURCE_APPLICATION}
-                   
-                        ${WORKSPACE}/build-tools/ose-deploy-monitor.sh -h=${OPENSHIFT_HOST} -t=${env.OSE_TOKEN} -n=${OPENSHIFT_SOURCE_PROJECT} -a=${OPENSHIFT_SOURCE_APPLICATION}
 
-                    """
+            // Prepare Artifacts
+            sh """
+                set +x
+                mkdir -p ${WORKSPACE}/projects/brms-coolstore-demo/target/s2i-build/deployments
+                cp -v ${WORKSPACE}/projects/brms-coolstore-demo/target/brms-coolstore-demo.war ${WORKSPACE}/projects/brms-coolstore-demo/target/s2i-build/deployments/ROOT.war
+                tar -cvf ${WORKSPACE}/projects/brms-coolstore-demo/target/brms-coolstore-demo.tar -C ${WORKSPACE}/projects/brms-coolstore-demo/target/s2i-build .
+                """
+            
+            // Push Artifacts to build image
+            sh """
+                set +x
+                ${WORKSPACE}/support/scripts/trigger-monitor-build.sh -h=${OPENSHIFT_HOST} -p=${OPENSHIFT_PORT} -t=${token} -n=${OPENSHIFT_SOURCE_PROJECT} -a=${OPENSHIFT_SOURCE_APPLICATION} -f="${WORKSPACE}/projects/brms-coolstore-demo/target/brms-coolstore-demo.tar"
+                   
+                ${WORKSPACE}/support/scripts/verify-deploy.sh -h=${OPENSHIFT_HOST} -p=${OPENSHIFT_PORT} -t=${token} -n=${OPENSHIFT_SOURCE_PROJECT} -a=${OPENSHIFT_SOURCE_APPLICATION}
+
+            """
+
                 
-            }
         }
         catch(e) {
             currentBuild.result = 'FAILURE'
@@ -58,22 +64,20 @@ node {
         
             sh "echo Deploying to Production"
         
-            withCredentials([[$class: 'StringBinding',
-                credentialsId: 'bdd-ose-token', variable: 'OSE_TOKEN']]) {
-            
-                // Download support scripts
-                sh """
-            
-                    curl -s -o ${WORKSPACE}/build-tools/is-tag.sh https://raw.githubusercontent.com/sabre1041/ose3-samples/master/is-tag.sh && chmod +x ${WORKSPACE}/build-tools/is-tag.sh
-            
-                    ${WORKSPACE}/build-tools/is-tag.sh -h=${OPENSHIFT_HOST} -t=${env.OSE_TOKEN} -sn=${OPENSHIFT_SOURCE_PROJECT} -sa=${OPENSHIFT_SOURCE_APPLICATION} -dn=${OPENSHIFT_DESTINATION_PROJECT} -da=${OPENSHIFT_DESTINATION_APPLICATION}
+            sh "set +x && echo Deploying to Production"
+        
+            // Promote Application support scripts
+            sh """
+                set +x
+                    
+                ${WORKSPACE}/support/scripts/is-tag.sh -h=${OPENSHIFT_HOST} -p=${OPENSHIFT_PORT} -t=${token} -sn=${OPENSHIFT_SOURCE_PROJECT} -sa=${OPENSHIFT_SOURCE_APPLICATION} -dn=${OPENSHIFT_DESTINATION_PROJECT} -da=${OPENSHIFT_DESTINATION_APPLICATION}
     
-                    sleep 5s 
+                sleep 5s 
              
-                    ${WORKSPACE}/build-tools/ose-deploy-monitor.sh -h=${OPENSHIFT_HOST} -t=${env.OSE_TOKEN} -n=${OPENSHIFT_DESTINATION_PROJECT} -a=${OPENSHIFT_DESTINATION_APPLICATION}
+                ${WORKSPACE}/support/scripts/verify-deploy.sh -h=${OPENSHIFT_HOST} -p=${OPENSHIFT_PORT} -t=${token} -n=${OPENSHIFT_DESTINATION_PROJECT} -a=${OPENSHIFT_DESTINATION_APPLICATION}
             
-                """
-            }
+            """
+
         }
         catch(e) {
             currentBuild.result = 'FAILURE'
@@ -85,7 +89,6 @@ node {
 }
 
 def processStageResult() {
-//    step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: "${EMAIL}", sendToIndividuals: false])
 
     if (currentBuild.result != null) {
         sh "exit 1"
