@@ -77,12 +77,10 @@
             },
             "spec": {
                 "source": {
-                    "type": "Git",
-                    "git": {
-                        "uri": "${SOURCE_REPOSITORY_URL}",
-                        "ref": "${SOURCE_REPOSITORY_REF}"
-                    },
-                    "contextDir": "${CONTEXT_DIR}"
+                    "type": "Binary",
+                    "binary": {
+                        "asFile": ""
+                    }
                 },
                 "strategy": {
                     "type": "Source",
@@ -182,15 +180,6 @@
                                 "name": "${APPLICATION_NAME}",
                                 "image": "${APPLICATION_NAME}",
                                 "imagePullPolicy": "Always",
-                                "livenessProbe": {
-                                    "exec": {
-                                        "command": [
-                                            "/bin/bash",
-                                            "-c",
-                                            "/opt/eap/bin/livenessProbe.sh"
-                                        ]
-                                    }
-                                },
                                 "readinessProbe": {
                                     "exec": {
                                         "command": [
@@ -291,33 +280,19 @@
             "description": "Custom hostname for http service route.  Leave blank for default hostname, e.g.: \u003capplication-name\u003e-\u003cproject\u003e.\u003cdefault-domain-suffix\u003e"
         },
         {
-            "name": "SOURCE_REPOSITORY_URL",
-            "description": "Git source URI for application",
-            "value": "https://github.com/sabre1041/ose-bdd-coolstore-demo",
-            "required": true
-        },
-        {
-            "name": "SOURCE_REPOSITORY_REF",
-            "description": "Git branch/tag reference",
-            "value": "master"
-        },
-        {
-            "name": "CONTEXT_DIR",
-            "description": "Path within Git project to build; empty for root project directory.",
-            "value": "projects/brms-coolstore-demo"
-        },
-        {
             "name": "KIE_SERVER_APP_NAME",
             "description": "Name of the kieserver application.",
             "value": "coolstore-rules"
         },
         {
             "name": "KIE_SERVER_USER",
-            "description": "kieserver user"
+            "description": "kieserver user",
+            "required": true
         },
         {
-            "name": "KIE_SERVER_USER",
-            "description": "kieserver password"
+            "name": "KIE_SERVER_PASSWORD",
+            "description": "kieserver password",
+            "required": true
         },
         {
             "name": "KIE_SERVER_PORT",
@@ -335,20 +310,6 @@
         {
             "name": "HORNETQ_CLUSTER_PASSWORD",
             "description": "HornetQ cluster admin password",
-            "generate": "expression",
-            "from": "[a-zA-Z0-9]{8}",
-            "required": true
-        },
-        {
-            "name": "GITHUB_WEBHOOK_SECRET",
-            "description": "GitHub trigger secret",
-            "generate": "expression",
-            "from": "[a-zA-Z0-9]{8}",
-            "required": true
-        },
-        {
-            "name": "GENERIC_WEBHOOK_SECRET",
-            "description": "Generic build trigger secret",
             "generate": "expression",
             "from": "[a-zA-Z0-9]{8}",
             "required": true

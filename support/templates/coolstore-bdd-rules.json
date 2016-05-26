@@ -2,7 +2,7 @@
     "kind": "Template",
     "apiVersion": "v1",
     "metadata": {
-        "name": "coolstore-bdd-rules-deploy",
+        "name": "coolstore-bdd-rules",
         "creationTimestamp": null,
         "annotations": {
             "description": "Application deploy template for BDD rules.",
@@ -64,6 +64,68 @@
                 "labels": {
                     "application": "${APPLICATION_NAME}"
                 }
+            }
+        },
+        {
+            "kind": "BuildConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${APPLICATION_NAME}",
+                "labels": {
+                    "application": "${APPLICATION_NAME}"
+                }
+            },
+            "spec": {
+                "source": {
+                    "type": "Binary",
+                    "binary": {
+                        "asFile": ""
+                    }
+                },
+                "strategy": {
+                    "type": "Source",
+                    "sourceStrategy": {
+                        "env": [
+                            {
+                                "name": "KIE_CONTAINER_DEPLOYMENT",
+                                "value": "${KIE_CONTAINER_DEPLOYMENT}"
+                            }
+                        ],
+                        "forcePull": true,
+                        "from": {
+                            "kind": "ImageStreamTag",
+                            "namespace": "${IMAGE_STREAM_NAMESPACE}",
+                            "name": "jboss-decisionserver62-openshift:1.2"
+                        }
+                    }
+                },
+                "output": {
+                    "to": {
+                        "kind": "ImageStreamTag",
+                        "name": "${APPLICATION_NAME}:latest"
+                    }
+                },
+                "triggers": [
+                    {
+                        "type": "GitHub",
+                        "github": {
+                            "secret": "${GITHUB_WEBHOOK_SECRET}"
+                        }
+                    },
+                    {
+                        "type": "Generic",
+                        "generic": {
+                            "secret": "${GENERIC_WEBHOOK_SECRET}"
+                        }
+                    },
+                    {
+                        "type": "ImageChange",
+                        "imageChange": {}
+                    },
+                    {
+                        "type": "ConfigChange"
+                    }
+                ]
             }
         },
         {
@@ -196,7 +258,7 @@
         {
             "name": "KIE_CONTAINER_DEPLOYMENT",
             "description": "The KIE Container deployment configuration in format: containerId=groupId:artifactId:version|c2=g2:a2:v2",
-            "value": "default=com.redhat:coolstore:2.0.0"
+            "value": "HelloRulesContainer=org.openshift.quickstarts:decisionserver-hellorules:1.2.0.Final"
         },
         {
             "name": "KIE_SERVER_USER",
@@ -235,20 +297,6 @@
             "required": true
         },
         {
-            "name": "GITHUB_WEBHOOK_SECRET",
-            "description": "GitHub trigger secret",
-            "generate": "expression",
-            "from": "[a-zA-Z0-9]{8}",
-            "required": true
-        },
-        {
-            "name": "GENERIC_WEBHOOK_SECRET",
-            "description": "Generic build trigger secret",
-            "generate": "expression",
-            "from": "[a-zA-Z0-9]{8}",
-            "required": true
-        },
-        {
             "name": "IMAGE_STREAM_NAMESPACE",
             "description": "Namespace in which the ImageStreams for Red Hat Middleware images are installed. These ImageStreams are normally installed in the openshift namespace. You should only need to modify this if you've installed the ImageStreams in a different namespace/project.",
             "value": "openshift",
@@ -256,7 +304,7 @@
         }
     ],
     "labels": {
-        "template": "coolstore-bdd-rules-deploy",
+        "template": "coolstore-bdd-rules",
         "xpaas": "1.2.0"
     }
 }

@@ -2,7 +2,7 @@
     "kind": "Template",
     "apiVersion": "v1",
     "metadata": {
-        "name": "coolstore-bdd-rules",
+        "name": "coolstore-bdd-rules-deploy",
         "creationTimestamp": null,
         "annotations": {
             "description": "Application deploy template for BDD rules.",
@@ -67,70 +67,6 @@
             }
         },
         {
-            "kind": "BuildConfig",
-            "apiVersion": "v1",
-            "metadata": {
-                "name": "${APPLICATION_NAME}",
-                "labels": {
-                    "application": "${APPLICATION_NAME}"
-                }
-            },
-            "spec": {
-                "source": {
-                    "type": "Git",
-                    "git": {
-                        "uri": "${SOURCE_REPOSITORY_URL}",
-                        "ref": "${SOURCE_REPOSITORY_REF}"
-                    },
-                    "contextDir": "${CONTEXT_DIR}"
-                },
-                "strategy": {
-                    "type": "Source",
-                    "sourceStrategy": {
-                        "env": [
-                            {
-                                "name": "KIE_CONTAINER_DEPLOYMENT",
-                                "value": "${KIE_CONTAINER_DEPLOYMENT}"
-                            }
-                        ],
-                        "forcePull": true,
-                        "from": {
-                            "kind": "ImageStreamTag",
-                            "namespace": "${IMAGE_STREAM_NAMESPACE}",
-                            "name": "jboss-decisionserver62-openshift:1.2"
-                        }
-                    }
-                },
-                "output": {
-                    "to": {
-                        "kind": "ImageStreamTag",
-                        "name": "${APPLICATION_NAME}:latest"
-                    }
-                },
-                "triggers": [
-                    {
-                        "type": "GitHub",
-                        "github": {
-                            "secret": "${GITHUB_WEBHOOK_SECRET}"
-                        }
-                    },
-                    {
-                        "type": "Generic",
-                        "generic": {
-                            "secret": "${GENERIC_WEBHOOK_SECRET}"
-                        }
-                    },
-                    {
-                        "type": "ImageChange",
-                        "imageChange": {}
-                    },
-                    {
-                        "type": "ConfigChange"
-                    }
-                ]
-            }
-        },
-        {
             "kind": "DeploymentConfig",
             "apiVersion": "v1",
             "metadata": {
@@ -188,15 +124,6 @@
                                 "name": "${APPLICATION_NAME}",
                                 "image": "${APPLICATION_NAME}",
                                 "imagePullPolicy": "Always",
-                                "livenessProbe": {
-                                    "exec": {
-                                        "command": [
-                                            "/bin/bash",
-                                            "-c",
-                                            "/opt/eap/bin/livenessProbe.sh"
-                                        ]
-                                    }
-                                },
                                 "readinessProbe": {
                                     "exec": {
                                         "command": [
@@ -260,7 +187,7 @@
         {
             "name": "KIE_CONTAINER_DEPLOYMENT",
             "description": "The KIE Container deployment configuration in format: containerId=groupId:artifactId:version|c2=g2:a2:v2",
-            "value": "HelloRulesContainer=org.openshift.quickstarts:decisionserver-hellorules:1.2.0.Final"
+            "value": "default=com.redhat:coolstore:2.0.0"
         },
         {
             "name": "KIE_SERVER_USER",
@@ -282,22 +209,6 @@
         {
             "name": "HOSTNAME_HTTP",
             "description": "Custom hostname for http service route.  Leave blank for default hostname, e.g.: \u003capplication-name\u003e-\u003cproject\u003e.\u003cdefault-domain-suffix\u003e"
-        },
-        {
-            "name": "SOURCE_REPOSITORY_URL",
-            "description": "Git source URI for application",
-            "value": "https://github.com/sabre1041/ose-bdd-coolstore-demo",
-            "required": true
-        },
-        {
-            "name": "SOURCE_REPOSITORY_REF",
-            "description": "Git branch/tag reference",
-            "value": "master"
-        },
-        {
-            "name": "CONTEXT_DIR",
-            "description": "Path within Git project to build; empty for root project directory.",
-            "value": "projects/coolstore-kjar-s2i"
         },
         {
             "name": "HORNETQ_QUEUES",
@@ -336,7 +247,7 @@
         }
     ],
     "labels": {
-        "template": "coolstore-bdd-rules",
+        "template": "coolstore-bdd-rules-deploy",
         "xpaas": "1.2.0"
     }
 }

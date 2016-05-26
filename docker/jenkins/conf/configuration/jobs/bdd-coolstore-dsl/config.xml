@@ -29,7 +29,7 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <javaposse.jobdsl.plugin.ExecuteDslScripts plugin="job-dsl@1.46">
-      <targets>ci/jobs/*</targets>
+      <targets>ci/*</targets>
       <usingScriptText>false</usingScriptText>
       <ignoreExisting>false</ignoreExisting>
       <removedJobAction>IGNORE</removedJobAction>
