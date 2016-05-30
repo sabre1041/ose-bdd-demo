@@ -258,7 +258,7 @@
         {
             "name": "KIE_CONTAINER_DEPLOYMENT",
             "description": "The KIE Container deployment configuration in format: containerId=groupId:artifactId:version|c2=g2:a2:v2",
-            "value": "HelloRulesContainer=org.openshift.quickstarts:decisionserver-hellorules:1.2.0.Final"
+            "value": "default=com.redhat:coolstore:2.0.0"
         },
         {
             "name": "KIE_SERVER_USER",

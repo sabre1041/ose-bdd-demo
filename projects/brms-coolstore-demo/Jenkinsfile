@@ -12,7 +12,12 @@ node {
    stage 'Maven Build'
    
         try {
-            sh "set +x && cd projects/brms-coolstore-demo && ${mvnHome}/bin/mvn -Dmaven.test.failure.ignore clean install"
+            sh """
+            set +x
+            cd ${WORKSPACE}/projects/brms-coolstore-demo
+            ${mvnHome}/bin/mvn build-helper:parse-version versions:set -DnewVersion=\\\${parsedVersion.majorVersion}.\\\${parsedVersion.minorVersion}.\\\${parsedVersion.incrementalVersion}-\${BUILD_NUMBER} 
+            ${mvnHome}/bin/mvn clean install org.apache.maven.plugins:maven-deploy-plugin:2.8.2:deploy 
+            """
    
             step([$class: 'ArtifactArchiver', artifacts: '**/target/*.war', fingerprint: true])
         }
@@ -61,11 +66,7 @@ node {
         input "Deploy Application to Production?"
  
         try {    
-        
-            sh "echo Deploying to Production"
-        
-            sh "set +x && echo Deploying to Production"
-        
+
             // Promote Application support scripts
             sh """
                 set +x
