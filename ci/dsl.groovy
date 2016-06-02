@@ -34,7 +34,7 @@ jobs.each { job ->
                 
                     configure { node -> 
                         node / 'extensions' << 'hudson.plugins.git.extensions.impl.PathRestriction' {
-                            includedRegions "${job.projectPath}/.*"
+                            includedRegions "^${job.projectPath}/.*"
                             excludedRegions ''
                         }
                     }
