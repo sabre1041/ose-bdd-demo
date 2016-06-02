@@ -11,7 +11,8 @@ OSE_CLI_PASSWORD="admin"
 OSE_CLI_HOST="https://10.1.2.2:8443"
 GIT_REF="master"
 KIE_SERVER_USER="kieserver"
-KIE_SERVER_PASSWORD="bdddemo"
+KIE_SERVER_PASSWORD="bdddemo1!"
+KIE_CONTAINER="default=com.redhat:coolstore:2.0.0"
 
 
 
@@ -59,6 +60,13 @@ oc import-image rhel7
 
 # Process Jenkins Template
 oc process -v APPLICATION_NAME=jenkins,GIT_REF=${GIT_REF} -f "${SCRIPT_BASE_DIR}/support/templates/jenkins-template.json" | oc create -f -
+
+
+# Update Jenkins with Environment Variables
+echo
+echo "Adding environment variables to Jenkins..."
+echo
+oc env dc/jenkins KIE_SERVER_USER=${KIE_SERVER_USER} KIE_SERVER_PASSWORD=${KIE_SERVER_PASSWORD} -n $OSE_CI_PROJECT
 
 echo
 echo "Waiting for Jenkins build to begin..."

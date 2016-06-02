@@ -1,6 +1,6 @@
 def jobs = [
     [ name: 'coolstore-app-pipeline', gitUrl: 'https://github.com/sabre1041/ose-bdd-demo.git', gitBranch: 'master', projectPath: 'projects/brms-coolstore-demo', openShiftHost: 'kubernetes.default.svc.cluster.local', openShiftPort: "443", openShiftSourceProject: 'coolstore-bdd-dev', openShiftSourceApplication: 'coolstore-app', openShiftDestinationProject: 'coolstore-bdd-prod', openShiftDestinationApplication: 'coolstore-app'],
-    [ name: 'coolstore-rules-pipeline', gitUrl: 'https://github.com/sabre1041/ose-bdd-demo.git', gitBranch: 'master', projectPath: 'projects/coolstore-kjar-s2i', openShiftHost: 'kubernetes.default.svc.cluster.local', openShiftPort: "443", openShiftSourceProject: 'coolstore-bdd-dev', openShiftSourceApplication: 'coolstore-rules', openShiftDestinationProject: 'coolstore-bdd-prod', openShiftDestinationApplication: 'coolstore-rules', kieServer: 'http://coolstore-rules-coolstore-bdd-test.apps.osebdd.example.com/kie-server/services/rest/server']
+    [ name: 'coolstore-rules-pipeline', gitUrl: 'https://github.com/sabre1041/ose-bdd-demo.git', gitBranch: 'master', projectPath: 'projects/coolstore-kjar-s2i', openShiftHost: 'kubernetes.default.svc.cluster.local', openShiftPort: "443", openShiftSourceProject: 'coolstore-bdd-dev', openShiftSourceApplication: 'coolstore-rules', openShiftDestinationProject: 'coolstore-bdd-prod', openShiftDestinationApplication: 'coolstore-rules', kieServer: 'http://coolstore-rules.coolstore-bdd-dev.svc.cluster.local:8080/kie-server/services/rest/server']
 ]
 
 jobs.each { job ->
@@ -16,6 +16,7 @@ jobs.each { job ->
 
             if(job.kieServer) {
                 stringParam "KIE_SERVER_URL",job.kieServer, "KIE Server URL"
+                stringParam "RULES_VERSION","", "Version of the Rules Package (Defaults to 2.0.0)"
             }
 
         }
