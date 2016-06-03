@@ -59,12 +59,10 @@
             },
             "spec": {
                 "source": {
-                    "type": "Git",
-                     "git": {
-                         "uri": "${GIT_URI}",
-                         "ref": "${GIT_REF}"
-                     },
-                     "contextDir": "docker/nexus"
+                    "type": "Binary",
+                    "binary": {
+                        "asFile": ""
+                    }
                 },
                 "strategy": {
                     "type": "Docker",
@@ -223,24 +221,12 @@
            "name": "APPLICATION_HOSTNAME",
            "displayName": "Application hostname"
         },
-
-        {
-            "name": "GIT_URI",
-            "description": "Git Repository",
-            "value": "https://github.com/sabre1041/ose-bdd-demo.git"
-        },
-        {
-            "name": "GIT_REF",
-            "description": "Git Branch",
-            "value": "master"
-        },
         {
             "name": "VOLUME_CAPACITY",
             "description": "Volume space available for data, e.g. 512Mi, 2Gi",
             "value": "1Gi",
             "required": true
         }
-
     ],
     "labels": {
         "template": "nexus-persistent"

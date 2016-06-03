@@ -9,20 +9,22 @@ OSE_BDD_PROD_PROJECT="coolstore-bdd-prod"
 OSE_CLI_USER="admin"
 OSE_CLI_PASSWORD="admin"
 OSE_CLI_HOST="https://10.1.2.2:8443"
-GIT_REF="master"
 KIE_SERVER_USER="kieserver"
 KIE_SERVER_PASSWORD="bdddemo1!"
 KIE_CONTAINER="default=com.redhat:coolstore:2.0.0"
 
 
 
-function wait_for_running_first_build() {
+function wait_for_running_build() {
     APP_NAME=$1
     NAMESPACE=$2
+    BUILD_NUMBER=$3
+
+    [ ! -z "$3" ] && BUILD_NUMBER="$3" || BUILD_NUMBER="1"
 
     while true
     do
-        BUILD_STATUS=$(oc get builds ${APP_NAME}-1 -n ${NAMESPACE} --template='{{ .status.phase }}')
+        BUILD_STATUS=$(oc get builds ${APP_NAME}-${BUILD_NUMBER} -n ${NAMESPACE} --template='{{ .status.phase }}')
 
         if [ "$BUILD_STATUS" == "Running" ] || [ "$BUILD_STATUS" == "Complete" ] || [ "$BUILD_STATUS" == "Failed" ]; then
            break
@@ -59,7 +61,7 @@ oc create -f"${SCRIPT_BASE_DIR}/support/templates/rhel7-is.json"
 oc import-image rhel7
 
 # Process Jenkins Template
-oc process -v APPLICATION_NAME=jenkins,GIT_REF=${GIT_REF} -f "${SCRIPT_BASE_DIR}/support/templates/jenkins-template.json" | oc create -f -
+oc process -v APPLICATION_NAME=jenkins -f "${SCRIPT_BASE_DIR}/support/templates/jenkins-template.json" | oc create -f -
 
 
 # Update Jenkins with Environment Variables
@@ -71,19 +73,33 @@ oc env dc/jenkins KIE_SERVER_USER=${KIE_SERVER_USER} KIE_SERVER_PASSWORD=${KIE_S
 echo
 echo "Waiting for Jenkins build to begin..."
 echo
-wait_for_running_first_build "jenkins" "${OSE_CI_PROJECT}"
+wait_for_running_build "jenkins" "${OSE_CI_PROJECT}"
 
-oc build-logs -f jenkins-1
+# Cancel initial build since this is a binary build with no content
+oc cancel-build jenkins-1
+
+oc start-build jenkins --from-dir="${SCRIPT_BASE_DIR}/docker/jenkins"
+
+wait_for_running_build "jenkins" "${OSE_CI_PROJECT}" "2"
+
+oc build-logs -f jenkins-2
 
 # Process Nexus Template
-oc process -v APPLICATION_NAME=nexus,GIT_REF=${GIT_REF} -f "${SCRIPT_BASE_DIR}/support/templates/nexus-template.json" | oc create -f -
+oc process -v APPLICATION_NAME=nexus -f "${SCRIPT_BASE_DIR}/support/templates/nexus-template.json" | oc create -f -
 
 echo
 echo "Waiting for Nexus build to begin..."
 echo
-wait_for_running_first_build "jenkins" "${OSE_CI_PROJECT}"
+wait_for_running_build "nexus" "${OSE_CI_PROJECT}"
 
-oc build-logs -f nexus-1
+# Cancel initial build since this is a binary build with no content
+oc cancel-build nexus-1
+
+oc start-build nexus --from-dir="${SCRIPT_BASE_DIR}/docker/nexus"
+
+wait_for_running_build "nexus" "${OSE_CI_PROJECT}" "2"
+
+oc build-logs -f nexus-2
 
 echo
 echo "Creating new BDD Dev Project (${OSE_BDD_DEV_PROJECT})..."
@@ -104,7 +120,7 @@ oc process -v KIE_SERVER_USER=${KIE_SERVER_USER},KIE_SERVER_PASSWORD=${KIE_SERVE
 echo
 echo "Waiting for App build to begin..."
 echo
-wait_for_running_first_build "coolstore-app" "${OSE_BDD_DEV_PROJECT}"
+wait_for_running_build "coolstore-app" "${OSE_BDD_DEV_PROJECT}"
 
 # Cancel initial build since this is a binary build
 oc cancel-build coolstore-app-1
@@ -118,7 +134,7 @@ oc process -v KIE_SERVER_USER=${KIE_SERVER_USER},KIE_SERVER_PASSWORD=${KIE_SERVE
 echo
 echo "Waiting for Rules build to begin..."
 echo
-wait_for_running_first_build "coolstore-rules" "${OSE_BDD_DEV_PROJECT}"
+wait_for_running_build "coolstore-rules" "${OSE_BDD_DEV_PROJECT}"
 
 # Cancel initial build since this is a binary build
 oc cancel-build coolstore-rules-1

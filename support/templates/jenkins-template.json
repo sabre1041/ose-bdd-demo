@@ -59,12 +59,10 @@
             },
             "spec": {
                 "source": {
-                    "type": "Git",
-                     "git": {
-                         "uri": "${GIT_URI}",
-                         "ref": "${GIT_REF}"
-                     },
-                     "contextDir": "docker/jenkins"
+                    "type": "Binary",
+                    "binary": {
+                        "asFile": ""
+                    }
                 },
                 "strategy": {
                     "type": "Docker",
@@ -246,16 +244,6 @@
             "name": "JENKINS_SERVICE_ACCOUNT",
             "description": "OpenShift Service account for Jenkins",
             "value": "jenkins"
-        },
-        {
-            "name": "GIT_URI",
-            "description": "Git Repository",
-            "value": "https://github.com/sabre1041/ose-bdd-demo.git"
-        },
-        {
-            "name": "GIT_REF",
-            "description": "Git Branch",
-            "value": "master"
         },
         {
             "name": "VOLUME_CAPACITY",
