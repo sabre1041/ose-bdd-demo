@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 SCRIPT_BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 
@@ -12,6 +14,9 @@ OSE_CLI_HOST="https://10.1.2.2:8443"
 KIE_SERVER_USER="kieserver"
 KIE_SERVER_PASSWORD="bdddemo1!"
 KIE_CONTAINER="default=com.redhat:coolstore:2.0.0"
+JENKINS_USER="admin"
+JENKINS_DSL_JOB="bdd-coolstore-dsl"
+CRUMB_ISSUER_URL='crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)'
 
 
 
@@ -22,6 +27,8 @@ function wait_for_running_build() {
 
     [ ! -z "$3" ] && BUILD_NUMBER="$3" || BUILD_NUMBER="1"
 
+    set +e
+
     while true
     do
         BUILD_STATUS=$(oc get builds ${APP_NAME}-${BUILD_NUMBER} -n ${NAMESPACE} --template='{{ .status.phase }}')
@@ -31,8 +38,9 @@ function wait_for_running_build() {
         fi
     done
 
-}
+    set -e
 
+}
 
 
 oc login -u ${OSE_CLI_USER} -p ${OSE_CLI_PASSWORD} ${OSE_CLI_HOST} --insecure-skip-tls-verify=true
@@ -161,6 +169,37 @@ oc process -v KIE_SERVER_USER=${KIE_SERVER_USER},KIE_SERVER_PASSWORD=${KIE_SERVE
 
 
 oc policy add-role-to-user edit system:serviceaccount:${OSE_BDD_PROD_PROJECT}:default -n ${OSE_BDD_DEV_PROJECT}
+
+
+# Trigger Jenkins DSL Build
+echo
+echo "Triggering Jenkins DSL Seed Job..."
+echo
+
+JENKINS_PASSWORD=$(oc env dc/jenkins -n $OSE_CI_PROJECT --list | grep JENKINS_PASSWORD | cut -d'=' -f2)
+JENKINS_HOST=$(oc get route jenkins -n $OSE_CI_PROJECT --template='{{ .spec.host }}')
+JENKINS_CRUMB=$(curl --user ${JENKINS_USER}:${JENKINS_PASSWORD} http://${JENKINS_HOST}/${CRUMB_ISSUER_URL} 2>/dev/null)
+curl -X POST http://${JENKINS_HOST}/job/${JENKINS_DSL_JOB}/build -H "${JENKINS_CRUMB}" --user "${JENKINS_USER}:${JENKINS_PASSWORD}"
+
+sleep 10
+
+LAST_BUILD_NUMBER=$(curl -s http://${JENKINS_HOST}/job/${JENKINS_DSL_JOB}/lastBuild/buildNumber --header "${JENKINS_CRUMB}" --user "${JENKINS_USER}:${JENKINS_PASSWORD}")
+
+while true
+do
+    BUILD_STATUS=$(curl -s http://${JENKINS_HOST}/job/${JENKINS_DSL_JOB}/lastBuild/api/json?pretty=true  --header "${JENKINS_CRUMB}" --user "${JENKINS_USER}:${JENKINS_PASSWORD}" | grep \"result\" | awk '{print $3}'
+)
+    if [[ $BUILD_STATUS == *"SUCCESS"* ]]
+    then
+        break
+    elif [[ $BUILD_STATUS == *"FAILED"* ]]
+    then
+        echo "Build Failed"
+        exit 1
+    fi
+
+done
+
 
 echo
 echo "Setup Complete"
