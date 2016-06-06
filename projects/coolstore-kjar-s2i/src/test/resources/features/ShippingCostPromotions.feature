@@ -5,7 +5,7 @@ Feature: Free Shipping Promo
       | name                  | price |
       | 16 oz. Vortex Tumbler |  6.00 |
     When the shipping is calculated
-    Then the shipping cost is 2.99
+    Then the shipping cost is 3.99
     And there is no shipping promotion applied
 
   Scenario: Free shipping when total cost is 75

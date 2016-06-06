@@ -5,7 +5,7 @@ Feature: Calculate Shipping Costs
       | name                  | price |
       | 16 oz. Vortex Tumbler |  6.00 |
     When the shipping is calculated
-    Then the shipping cost is 2.99
+    Then the shipping cost is 3.99
 
   Scenario: Shipping cost multiple items - total under 25 dollars
     Given the following shopping cart items:
@@ -13,7 +13,7 @@ Feature: Calculate Shipping Costs
       | 16 oz. Vortex Tumbler |  6.00 |
       | Forge Laptop Sticker  |  8.50 |
     When the shipping is calculated
-    Then the shipping cost is 2.99
+    Then the shipping cost is 3.99
 
   @wip
   Scenario: Item cost equal to 25 dollars

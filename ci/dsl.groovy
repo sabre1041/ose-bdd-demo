@@ -16,7 +16,6 @@ jobs.each { job ->
 
             if(job.kieServer) {
                 stringParam "KIE_SERVER_URL",job.kieServer, "KIE Server URL"
-                stringParam "RULES_VERSION","", "Version of the Rules Package (Defaults to 2.0.0)"
             }
 
         }

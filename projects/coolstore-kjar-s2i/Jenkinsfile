@@ -3,7 +3,6 @@ node {
     def WORKSPACE = pwd()
     def mvnHome = tool 'maven'
     def token = readFile('/var/run/secrets/kubernetes.io/serviceaccount/token')
-    def ruleVersion = "${RULES_VERSION}" != "" ? "${RULES_VERSION}" : "2.0.0"
    
    stage 'Checkout'
 
@@ -13,7 +12,9 @@ node {
 
        sh """
            cd ${WORKSPACE}/projects/coolstore-kjar-s2i
-           ${mvnHome}/bin/mvn clean org.apache.maven.plugins:maven-dependency-plugin:copy -Dartifact=com.redhat:coolstore:${ruleVersion} -Dmdep.stripVersion=true -DoutputDirectory=target/s2i-build
+	   full_version=\$(cat version.properties)
+	   parsed_version=\${full_version:33}
+           ${mvnHome}/bin/mvn clean org.apache.maven.plugins:maven-dependency-plugin:copy -Dartifact=\${parsed_version} -Dmdep.stripVersion=true -DoutputDirectory=target/s2i-build
        """
 
 
@@ -24,6 +25,8 @@ node {
             sh """
                 mkdir -p ${WORKSPACE}/projects/coolstore-kjar-s2i/target/s2i-build/deployments
                 mv ${WORKSPACE}/projects/coolstore-kjar-s2i/target/s2i-build/*.jar ${WORKSPACE}/projects/coolstore-kjar-s2i/target/s2i-build/deployments/
+		mkdir -p ${WORKSPACE}/projects/coolstore-kjar-s2i/target/s2i-build/.sti
+		cp ${WORKSPACE}/projects/coolstore-kjar-s2i/version.properties ${WORKSPACE}/projects/coolstore-kjar-s2i/target/s2i-build/.sti/environment
                 tar -cvf ${WORKSPACE}/projects/coolstore-kjar-s2i/target/coolstore.tar -C ${WORKSPACE}/projects/coolstore-kjar-s2i/target/s2i-build .
                 """
             
