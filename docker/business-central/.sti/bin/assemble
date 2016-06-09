@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Download and place binary in JBoss. WAR_FILE_URL variable is specified as an environment variable in the BuildConfig
+#curl -o $JBOSS_HOME/standalone/deployments/ROOT.war -O ${WAR_FILE_URL}
+
+mv /tmp/src/support/jboss-brms* $JBOSS_HOME/.
+
+cd $JBOSS_HOME
+
+unzip jboss-brms*
+
+cp -f -r jboss-eap-6.4/standalone/deployments/* standalone/deployments/.
+cp -f -r jboss-eap-6.4/standalone/configuration/* standalone/configuration/.
+cp -r -f jboss-eap-6.4/bin/* bin/.
+
+rm -rf standalone/deployments/kie-server*
+
+rm -rf jboss-eap-6.4
+rm jboss-brms*
+
+./bin/add-user.sh -a --user $BUSINESS_CENTRAL_USER --password $BUSINESS_CENTRAL_PASSWORD --role admin,rest-all
+
+mkdir $HOME/gitrepo
+mkdir $HOME/tmprepo
+mv /tmp/src/rules/.niogit $HOME/tmprepo/.
+
+mv /tmp/src/hookScripts/prepopulateNioGit.sh $HOME/.
+
+chmod 777 $HOME/prepopulateNioGit.sh
+
+mv /tmp/src/hookScripts/initNexusDeploy.sh $HOME/.
+
+chmod 777 $HOME/initNexusDeploy.sh
+
+mv /tmp/src/conf/settings.xml $HOME/.
+
+# Call default assemble script
+/usr/local/s2i/assemble
+
+rm -rf $HOME/.m2

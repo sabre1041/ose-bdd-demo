@@ -152,10 +152,6 @@
                                 ],
                                 "env": [
                                     {
-                                        "name": "KIE_CONTAINER_DEPLOYMENT",
-                                        "value": "${KIE_CONTAINER_DEPLOYMENT}"
-                                    },
-                                    {
                                         "name": "KIE_SERVER_USER",
                                         "value": "${KIE_SERVER_USER}"
                                     },
@@ -184,11 +180,6 @@
         }
     ],
     "parameters": [
-        {
-            "name": "KIE_CONTAINER_DEPLOYMENT",
-            "description": "The KIE Container deployment configuration in format: containerId=groupId:artifactId:version|c2=g2:a2:v2",
-            "value": "default=com.redhat:coolstore:2.0.0"
-        },
         {
             "name": "KIE_SERVER_USER",
             "description": "The user name to access the KIE Server REST or JMS interface.",

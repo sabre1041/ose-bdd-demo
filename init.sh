@@ -109,6 +109,24 @@ wait_for_running_build "nexus" "${OSE_CI_PROJECT}" "2"
 
 oc build-logs -f nexus-2
 
+# Process Business-Central Template
+oc process -v APPLICATION_NAME=business-central -f "${SCRIPT_BASE_DIR}/support/templates/business-central-template.json" | oc create -f -
+
+echo
+echo "Waiting for Business Central build to begin..."
+echo
+wait_for_running_build "business-central" "${OSE_CI_PROJECT}"
+
+# Cancel initial build since this is a binary build with no content
+oc cancel-build business-central-1
+
+oc start-build business-central --from-dir="${SCRIPT_BASE_DIR}/docker/business-central"
+
+wait_for_running_build "business-central" "${OSE_CI_PROJECT}" "2"
+
+oc build-logs -f business-central-2
+
+
 echo
 echo "Creating new BDD Dev Project (${OSE_BDD_DEV_PROJECT})..."
 echo
