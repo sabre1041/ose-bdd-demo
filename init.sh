@@ -52,6 +52,9 @@ echo
 # Create New Project
 oc new-project ${OSE_CI_PROJECT}
 
+# Grant Default Service Account Access to CI Project
+oc policy add-role-to-user edit system:serviceaccount:$OSE_CI_PROJECT:default
+
 echo
 echo "Creating Jenkins Service Account and Adding Permissions..."
 echo
@@ -59,7 +62,7 @@ echo
 # Create New Service Account
 oc process -v NAME=jenkins -f "${SCRIPT_BASE_DIR}/support/templates/create-sa.json" | oc create -f -
 
-# Create Jenkins Service Account
+# Grant Jenkins Service Account Access to CI Project
 oc policy add-role-to-user edit system:serviceaccount:$OSE_CI_PROJECT:jenkins
 
 # Process RHEL Template
@@ -134,6 +137,9 @@ echo
 # Create new Dev Project
 oc new-project ${OSE_BDD_DEV_PROJECT}
 
+# Grant Default Service Account Access to Dev Project
+oc policy add-role-to-user edit system:serviceaccount:$OSE_BDD_DEV_PROJECT:default -n ${OSE_BDD_DEV_PROJECT}
+
 # Grant Jenkins Service Account Access to Dev Project
 oc policy add-role-to-user edit system:serviceaccount:$OSE_CI_PROJECT:jenkins -n ${OSE_BDD_DEV_PROJECT}
 
@@ -170,6 +176,9 @@ echo "Creating new BDD Prod Project (${OSE_BDD_PROD_PROJECT})..."
 echo
 # Create new Dev Project
 oc new-project ${OSE_BDD_PROD_PROJECT}
+
+# Grant Default Service Account Access to Dev Project
+oc policy add-role-to-user edit system:serviceaccount:$OSE_BDD_PROD_PROJECT:default -n ${OSE_BDD_PROD_PROJECT}
 
 # Grant Jenkins Service Account Access to Dev Project
 oc policy add-role-to-user edit system:serviceaccount:$OSE_CI_PROJECT:jenkins -n ${OSE_BDD_PROD_PROJECT}

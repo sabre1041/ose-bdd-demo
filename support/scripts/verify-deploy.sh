@@ -110,7 +110,7 @@ fi
 
 LATEST_DC_VERSION=$(curl -s -f -H "Authorization: Bearer ${TOKEN}" --insecure  https://${HOST}:${PORT}/oapi/v1/namespaces/${NAMESPACE}/deploymentconfigs/${APP} | jq -r .status.latestVersion)
 
-
+set +e
 # Cycle Through Status to see if we have hit our deployment target
 while [ $COUNTER -lt $MAX_COUNTER ]
 do
