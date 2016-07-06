@@ -1,8 +1,10 @@
-node {
+node('ose-agent') {
     
     def WORKSPACE = pwd()
     def mvnHome = tool 'maven'
-    def token = readFile('/var/run/secrets/kubernetes.io/serviceaccount/token')
+    env.KUBECONFIG = pwd() + "/.kubeconfig"
+    def devProject = "coolstore-bdd-dev"
+    def prodProject = "coolstore-bdd-prod"
    
    stage 'Checkout'
 
@@ -10,33 +12,35 @@ node {
        
   stage 'Retrieve Rules'
 
+      def rulesVersion = parseVersion("${WORKSPACE}/version.properties", "${WORKSPACE}/target/parsed_version.txt")
+
        sh """
-           cd ${WORKSPACE}/projects/coolstore-kjar-s2i
-	   full_version=\$(cat version.properties)
-	   parsed_version=\${full_version:33}
-           ${mvnHome}/bin/mvn clean org.apache.maven.plugins:maven-dependency-plugin:copy -Dartifact=\${parsed_version} -Dmdep.stripVersion=true -DoutputDirectory=target/s2i-build
+       ${mvnHome}/bin/mvn clean org.apache.maven.plugins:maven-dependency-plugin:copy -Dartifact=${rulesVersion} -Dmdep.stripVersion=true -DoutputDirectory=target/s2i-build
        """
 
 
     stage 'OpenShift Build'
       
+        def imageVersion = parseImageVersion("${WORKSPACE}/target/version-${env.BUILD_NUMBER}.txt",rulesVersion,"\${BUILD_NUMBER}")
+      
         try {
             // Prepare Artifacts
+            login()
+            
             sh """
-                mkdir -p ${WORKSPACE}/projects/coolstore-kjar-s2i/target/s2i-build/deployments
-                mv ${WORKSPACE}/projects/coolstore-kjar-s2i/target/s2i-build/*.jar ${WORKSPACE}/projects/coolstore-kjar-s2i/target/s2i-build/deployments/
-		mkdir -p ${WORKSPACE}/projects/coolstore-kjar-s2i/target/s2i-build/.sti
-		cp ${WORKSPACE}/projects/coolstore-kjar-s2i/version.properties ${WORKSPACE}/projects/coolstore-kjar-s2i/target/s2i-build/.sti/environment
-                tar -cvf ${WORKSPACE}/projects/coolstore-kjar-s2i/target/coolstore.tar -C ${WORKSPACE}/projects/coolstore-kjar-s2i/target/s2i-build .
+                currentOutputName=\$(oc get bc ${OPENSHIFT_SOURCE_APPLICATION} -n ${OPENSHIFT_SOURCE_PROJECT} --template='{{ .spec.output.to.name }}')
+                newImageName=\${currentOutputName%:*}:${imageVersion}
+                oc patch bc ${OPENSHIFT_SOURCE_APPLICATION} -n ${OPENSHIFT_SOURCE_PROJECT} -p "{ \\"spec\\": { \\"output\\": { \\"to\\": { \\"name\\": \\"\${newImageName}\\" } } } }"
+                mkdir -p ${WORKSPACE}/target/s2i-build/deployments
+                mv ${WORKSPACE}/target/s2i-build/*.jar ${WORKSPACE}/target/s2i-build/deployments/
+		        mkdir -p ${WORKSPACE}/target/s2i-build/.sti
+		        cp ${WORKSPACE}/version.properties ${WORKSPACE}/target/s2i-build/.sti/environment
+                oc start-build ${OPENSHIFT_SOURCE_APPLICATION} -n ${OPENSHIFT_SOURCE_PROJECT} --follow=true --wait=true --from-dir="${WORKSPACE}/target/s2i-build"
                 """
             
-            // Push Artifacts to build image
-            sh """
-                set +x
-                ${WORKSPACE}/support/scripts/trigger-monitor-build.sh -h=${OPENSHIFT_HOST} -p=${OPENSHIFT_PORT} -t=${token} -n=${OPENSHIFT_SOURCE_PROJECT} -a=${OPENSHIFT_SOURCE_APPLICATION} -f="${WORKSPACE}/projects/coolstore-kjar-s2i/target/coolstore.tar"
-
-                ${WORKSPACE}/support/scripts/verify-deploy.sh -h=${OPENSHIFT_HOST} -p=${OPENSHIFT_PORT} -t=${token} -n=${OPENSHIFT_SOURCE_PROJECT} -a=${OPENSHIFT_SOURCE_APPLICATION}
-            """
+            deployApp("$OPENSHIFT_SOURCE_APPLICATION", "$OPENSHIFT_SOURCE_PROJECT", imageVersion)
+            
+            validateDeployment("$OPENSHIFT_SOURCE_APPLICATION","$OPENSHIFT_SOURCE_PROJECT")
   
         }
         catch(e) {
@@ -50,18 +54,21 @@ node {
     stage 'Acceptance Test'
            
         try {
-                                
-            sh """
-                cd projects/coolstore-kjar-s2i
-                ${mvnHome}/bin/mvn -Dmaven.test.failure.ignore clean test -DKIE_SERVER_URL=$KIE_SERVER_URL -DKIE_SERVER_USER=${env.KIE_SERVER_USER} -DKIE_SERVER_PASSWORD=${env.KIE_SERVER_PASSWORD}
-                
-            """
+            
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'bdd-kieserver',
+                    usernameVariable: 'KIE_SERVER_USER', passwordVariable: 'KIE_SERVER_PASSWORD']]) {
+                               
+                sh """
+                set +x
+                    ${mvnHome}/bin/mvn -Dmaven.test.failure.ignore clean test -DKIE_SERVER_URL=${KIE_SERVER_URL} -DKIE_SERVER_USER=${env.KIE_SERVER_USER} -DKIE_SERVER_PASSWORD=${env.KIE_SERVER_PASSWORD}
+                """
+            }
 
             step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
    
-            step([$class: 'CucumberReportPublisher', fileExcludePattern: '', fileIncludePattern: '', ignoreFailedTests: false, jenkinsBasePath: '', jsonReportDirectory: 'projects/coolstore-kjar-s2i/target', missingFails: false, parallelTesting: false, pendingFails: false, skippedFails: false, undefinedFails: false])
+            step([$class: 'CucumberReportPublisher', fileExcludePattern: '', fileIncludePattern: '', ignoreFailedTests: false, jenkinsBasePath: '', jsonReportDirectory: 'target', missingFails: false, parallelTesting: false, pendingFails: false, skippedFails: false, undefinedFails: false])
 
-            step([$class: 'CukedoctorPublisher', featuresDir: 'projects/coolstore-kjar-s2i', numbered: true, sectAnchors: true, toc: 'RIGHT', format: 'HTML', title: 'Living Documentation'])
+            step([$class: 'CukedoctorPublisher', numbered: true, sectAnchors: true, toc: 'RIGHT', format: 'HTML', title: 'Living Documentation'])
                 
         }
         catch(e) {
@@ -79,24 +86,25 @@ node {
     
         try {    
         
-            println("Deploying to Production...")
-        
+            println("Deploying to Production...")        
 
-            // Promote Application support scripts
             sh """
-                set +x
-                    
-                ${WORKSPACE}/support/scripts/is-tag.sh -h=${OPENSHIFT_HOST} -p=${OPENSHIFT_PORT} -t=${token} -sn=${OPENSHIFT_SOURCE_PROJECT} -sa=${OPENSHIFT_SOURCE_APPLICATION} -dn=${OPENSHIFT_DESTINATION_PROJECT} -da=${OPENSHIFT_DESTINATION_APPLICATION}
-    
-                sleep 5s 
-             
-                ${WORKSPACE}/support/scripts/verify-deploy.sh -h=${OPENSHIFT_HOST} -p=${OPENSHIFT_PORT} -t=${token} -n=${OPENSHIFT_DESTINATION_PROJECT} -a=${OPENSHIFT_DESTINATION_APPLICATION}
-            
+              set +x
+              echo "Promoting application to Prod Environment"
+              oc tag ${OPENSHIFT_SOURCE_PROJECT}/${OPENSHIFT_SOURCE_APPLICATION}:${imageVersion} ${OPENSHIFT_DESTINATION_PROJECT}/${OPENSHIFT_DESTINATION_APPLICATION}:${imageVersion}
+              # Sleep for a few moments
+              sleep 5
             """
+
+            deployApp("$OPENSHIFT_DESTINATION_APPLICATION", "$OPENSHIFT_DESTINATION_PROJECT", imageVersion)
+
+            validateDeployment("$OPENSHIFT_DESTINATION_APPLICATION","$OPENSHIFT_DESTINATION_PROJECT")            
+           
 
 
         }
         catch(e) {
+            println(e)
             currentBuild.result = 'FAILURE'
             throw e
         }
@@ -106,9 +114,90 @@ node {
 }
 
 def processStageResult() {
-//    step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: "${EMAIL}", sendToIndividuals: false])
 
-    if (currentBuild.result != null && currentBuild.result != "SUCCESS") {
+    if (currentBuild.result != null && currentBuild.result == "FAILURE") {
         sh "exit 1"
     }
+}
+
+def login() {
+    sh """
+       set +x
+       oc login --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt --token=\$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) https://kubernetes.default.svc.cluster.local >/dev/null 2>&1 || echo 'OpenShift login failed'
+       """
+}
+
+def parseVersion(String sourceFileName, String destinationFileName) {
+    sh """
+    set +x
+   full_version=\$(cat $sourceFileName)
+   parsed_version=\${full_version:33}
+   mkdir -p \$(dirname ${destinationFileName})
+   echo \$parsed_version > ${destinationFileName}
+    """
+    
+    return readFile("${destinationFileName}").trim()
+}
+
+def parseImageVersion(String destinationFileName, String rulesVersion, String buildVersion) {
+    
+    sh """
+    set +x
+    var=\$(echo ${rulesVersion} | cut -f3 -d":")
+    echo \${var}-${buildVersion} > ${destinationFileName}
+    """
+    return readFile("${destinationFileName}").trim()
+}
+
+def deployApp(appName, namespace, version) {
+            sh """
+          set +x
+          newDeploymentImageName=${appName}:${version}
+          imageReference=\$(oc get is ${appName} -n ${namespace} -o jsonpath="{.status.tags[?(@.tag==\\"${version}\\")].items[*].dockerImageReference}")
+          oc patch dc/${appName} -n ${namespace} -p "{\\"spec\\":{\\"template\\":{\\"spec\\":{\\"containers\\":[{\\"name\\":\\"${appName}\\",\\"image\\": \\"\${imageReference}\\" } ]}}, \\"triggers\\": [ { \\"type\\": \\"ImageChange\\", \\"imageChangeParams\\": { \\"containerNames\\": [ \\"${appName}\\" ], \\"from\\": { \\"kind\\": \\"ImageStreamTag\\", \\"name\\": \\"\${newDeploymentImageName}\\" } } } ] }}"
+          oc deploy ${appName} -n ${namespace} --latest
+          # Sleep for a few moments
+          sleep 5
+        """
+
+
+}
+
+
+def validateDeployment(String dcName, String namespace) {
+
+    sh """
+      set +x
+      COUNTER=0
+      DELAY=10
+      MAX_COUNTER=30
+      echo "Validating deployment of ${dcName} in project ${namespace}"
+      LATEST_DC_VERSION=\$(oc get dc ${dcName} -n ${namespace} --template='{{ .status.latestVersion }}')
+      RC_NAME=${dcName}-\${LATEST_DC_VERSION}
+      set +e
+      while [ \$COUNTER -lt \$MAX_COUNTER ]
+      do
+        RC_ANNOTATION_RESPONSE=\$(oc get rc -n ${namespace} \$RC_NAME --template="{{.metadata.annotations}}")
+        echo "\$RC_ANNOTATION_RESPONSE" | grep openshift.io/deployment.phase:Complete >/dev/null 2>&1
+        if [ \$? -eq 0 ]; then
+          echo "Deployment Succeeded!"
+          break
+        fi
+        echo "\$RC_ANNOTATION_RESPONSE" | grep -E 'openshift.io/deployment.phase:Failed|openshift.io/deployment.phase:Cancelled' >/dev/null 2>&1
+        if [ \$? -eq 0 ]; then
+          echo "Deployment Failed"
+          exit 1
+        fi
+        if [ \$COUNTER -lt \$MAX_COUNTER ]; then
+          echo -n "."
+          COUNTER=\$(( \$COUNTER + 1 ))
+        fi
+        if [ \$COUNTER -eq \$MAX_COUNTER ]; then
+          echo "Max Validation Attempts Exceeded. Failed Verifying Application Deployment..."
+          exit 1
+        fi
+        sleep \$DELAY
+      done
+      set -e
+    """
 }

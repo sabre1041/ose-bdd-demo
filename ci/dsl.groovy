@@ -1,6 +1,6 @@
 def jobs = [
-    [ name: 'coolstore-app-pipeline', gitUrl: 'https://github.com/sabre1041/ose-bdd-demo.git', gitBranch: 'master', projectPath: 'projects/brms-coolstore-demo', openShiftHost: 'kubernetes.default.svc.cluster.local', openShiftPort: "443", openShiftSourceProject: 'coolstore-bdd-dev', openShiftSourceApplication: 'coolstore-app', openShiftDestinationProject: 'coolstore-bdd-prod', openShiftDestinationApplication: 'coolstore-app'],
-    [ name: 'coolstore-rules-pipeline', gitUrl: 'https://github.com/sabre1041/ose-bdd-demo.git', gitBranch: 'master', projectPath: 'projects/coolstore-kjar-s2i', openShiftHost: 'kubernetes.default.svc.cluster.local', openShiftPort: "443", openShiftSourceProject: 'coolstore-bdd-dev', openShiftSourceApplication: 'coolstore-rules', openShiftDestinationProject: 'coolstore-bdd-prod', openShiftDestinationApplication: 'coolstore-rules', kieServer: 'http://coolstore-rules.coolstore-bdd-dev.svc.cluster.local:8080/kie-server/services/rest/server']
+    [ name: 'coolstore-app-pipeline', gitUrl: 'http://gogs:3000/gogs/brms-coolstore-demo.git', gitBranch: 'master', openShiftHost: 'kubernetes.default.svc.cluster.local', openShiftPort: "443", openShiftSourceProject: 'coolstore-bdd-dev', openShiftSourceApplication: 'coolstore-app', openShiftDestinationProject: 'coolstore-bdd-prod', openShiftDestinationApplication: 'coolstore-app'],
+    [ name: 'coolstore-rules-pipeline', gitUrl: 'http://gogs:3000/gogs/coolstore-kjar-s2i.git', gitBranch: 'master', openShiftHost: 'kubernetes.default.svc.cluster.local', openShiftPort: "443", openShiftSourceProject: 'coolstore-bdd-dev', openShiftSourceApplication: 'coolstore-rules', openShiftDestinationProject: 'coolstore-bdd-prod', openShiftDestinationApplication: 'coolstore-rules', kieServer: 'http://coolstore-rules.coolstore-bdd-dev.svc.cluster.local:8080/kie-server/services/rest/server']
 ]
 
 jobs.each { job ->
@@ -27,19 +27,12 @@ jobs.each { job ->
                     remote {
                         url(job.gitUrl)
                     }
-                
+
                     branch(job.gitBranch) 
-                
-                
-                    configure { node -> 
-                        node / 'extensions' << 'hudson.plugins.git.extensions.impl.PathRestriction' {
-                            includedRegions "^${job.projectPath}/.*"
-                            excludedRegions ''
-                        }
-                    }
+
                 }
             }
-            scriptPath "${job.projectPath}/Jenkinsfile"
+            scriptPath "Jenkinsfile"
         }    
       }
     }
