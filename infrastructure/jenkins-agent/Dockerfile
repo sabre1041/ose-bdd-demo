@@ -8,7 +8,7 @@ ENV MAVEN_VERSION 3.3.9
 ENV JAVA_HOME /usr/lib/jvm/java
 
 RUN yum clean all && \ 
-    export INSTALL_PKGS="nss_wrapper java-1.8.0-openjdk-devel java-1.8.0-openjdk-headless gettext tar git which origin-clients unzip" && \
+    export INSTALL_PKGS="nss_wrapper java-1.8.0-openjdk-devel java-1.8.0-openjdk-headless gettext tar git which origin-clients unzip make nodejs npm" && \
     yum -y --setopt=tsflags=nodocs install epel-release centos-release-openshift-origin && \
     yum install -y --setopt=tsflags=nodocs install $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS && \
@@ -26,7 +26,8 @@ COPY config/jenkins-agent.sh config/settings.xml config/passwd.template /opt/jen
 # Download JNLP Client, move configurations/scripts and modify permissions
 RUN mv /opt/jenkins-agent/jenkins-agent.sh /opt/jenkins-agent/bin && \
   mv /opt/jenkins-agent/settings.xml /usr/share/maven/conf/settings.xml && \
-  chown -R 1001:0 /opt/jenkins-agent /opt/jenkins-agent/bin
+  chown -R 1001:0 /opt/jenkins-agent /opt/jenkins-agent/bin && \
+  echo "registry = http://\${NEXUS_SERVICE_HOST}:\${NEXUS_SERVICE_PORT}/content/groups/npm-all/" > /opt/jenkins-agent/.npmrc
 
 WORKDIR /var/lib/jenkins
 
