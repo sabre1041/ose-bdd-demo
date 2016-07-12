@@ -1,0 +1,40 @@
+<div>
+<!-- Items -->
+  <table class="table table-striped table-bordered">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Price</th>
+      <th>Details</th>
+      <th>Add to Cart</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="item in items">
+      <td>{{item.name}}</td>
+      <td>${{item.price}}</td>
+      <td>
+        <my-item-details my-item-id="{{item.id}}">
+          <img src="{{item.image}}"/>
+          <p>{{item.description}}</p>
+        </my-item-details>
+      </td>
+      <td>
+        <button ng-click="addToCart(item)"class="btn btn-default" type="button"> <span class="pficon-add-circle-o"></span></button>
+      </td>
+      
+    </tr>
+  </tbody>
+</table>
+<!-- Cart -->
+<h2>My Cart</h2>
+<ul class="list-group">
+  <li ng-repeat="item in cart" class="list-group-item">
+    <button ng-click="removeFromCart(item)"class="btn btn-default" type="button"> <span class="pficon-close"></span></button>
+    {{item.name}} | ${{item.price}}
+  </li>
+  <li>
+    <button ng-click="checkout()"class="btn btn-default" type="button">CHECKOUT</button>
+  </li>
+</ul>
+</div>

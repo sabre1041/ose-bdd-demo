@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="coolstoreApp">
+	<head>
+		<meta charset="utf-8">
+		<title>The Cool Store</title>
+		<!-- Stylesheets  -->
+		<link rel="stylesheet" href="node_modules/patternfly/dist/css/patternfly.css">
+		<link rel="stylesheet" href="node_modules/patternfly/dist/css/patternfly-additions.css">
+
+		<!-- JQuery -->
+		<script src="node_modules/jquery/dist/jquery.js"></script>
+
+		<!-- Bootstrap -->
+		<script src="node_modules/bootstrap/dist/js/bootstrap.js"></script>		
+
+		<!-- Angular -->
+		<script src="node_modules/angular/angular.js"></script>
+		<script src="node_modules/angular-route/angular-route.js"></script>
+
+		<!-- Patternfly -->
+		<script src="node_modules/patternfly/dist/js/patternfly.js"></script>
+		
+		<!-- Application Dependencies -->
+		<script src="app/app.js"></script>
+
+		<!-- Controllers -->
+		<script src="app/controllers/Home.js"></script>
+
+		<!-- Services -->
+		<script src="app/services/KieServerService.js"></script>		
+
+		<!-- Directives -->
+		<script src="app/directives/item-details/item-details-directive.js"></script>
+	</head>
+	<body>
+		<nav class="navbar navbar-default navbar-pf" role="navigation">
+	    	<div class="navbar-header">
+	    	<h2 style="color:white">
+		            <img src="app/images/redhat.png" alt="Red Hat logo" style="max-height:40px;max-width:220px;height:auto;width:auto"/>
+		            The Cool Store</h2>
+	    	</div>
+		</nav>
+
+	  	<div ng-view></div>
+	</body>
+</html>

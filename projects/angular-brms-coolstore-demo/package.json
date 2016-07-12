@@ -1,0 +1,22 @@
+{
+  "name": "brms-coolstore-demo",
+  "private": true,
+  "version": "0.0.0",
+  "description": "A simple store app",
+  "license": "MIT",
+  "devDependencies": {
+    "bower": "1.7.x"
+  },
+  "scripts": {},
+  "dependencies": {
+    "angular": "1.5.x",
+    "angular-route": "1.5.x",
+    "body-parser": "^1.15.2",
+    "bootstrap": "3.3.6",
+    "express": "4.13.x",
+    "http-request": "^0.7.0",
+    "jquery": "2.2.4",
+    "patternfly": "^3.5.0",
+    "xmlhttprequest": "1.8.0"
+  }
+}
