@@ -1,0 +1,72 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "jenkins-agent",
+        "annotations": {
+            "description": "Jenkins Agent",
+            "iconClass": "icon-jenkins",
+            "tags": "jenkins"
+        }
+    },
+    "objects": [
+        {
+            "kind": "ImageStream",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${APPLICATION_NAME}",
+                "annotations": {
+                  "slave-directory": "/opt/jenkins-agent",
+                  "slave-label": "ose-agent"  
+                },
+                "labels": {
+                    "application": "${APPLICATION_NAME}",
+                    "role": "jenkins-slave"
+                }
+            }
+        },
+		{
+            "kind": "BuildConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${APPLICATION_NAME}",
+                "labels": {
+                    "application": "${APPLICATION_NAME}"
+                }
+            },
+            "spec": {
+                "source": {
+                    "type": "Binary",
+                    "binary": {
+                        "asFile": ""
+                    }
+                },
+                "strategy": {
+                    "type": "Docker",
+                    "dockerStrategy": {
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "centos:7"
+                        }
+                    }
+                },
+                "output": {
+                    "to": {
+                        "kind": "ImageStreamTag",
+                        "name": "${APPLICATION_NAME}:latest"
+                    }
+                }
+            }
+		}
+    ],
+    "parameters": [
+        {
+            "name": "APPLICATION_NAME",
+            "description": "Application Name",
+            "value": "jenkins-agent"
+        }
+    ],
+    "labels": {
+        "template": "jenkins-agent"
+    }
+}

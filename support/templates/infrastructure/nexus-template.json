@@ -2,11 +2,11 @@
     "kind": "Template",
     "apiVersion": "v1",
     "metadata": {
-        "name": "jenkins-persistent",
+        "name": "nexus-persistent",
         "annotations": {
-            "description": "Jenkins",
-            "iconClass": "icon-jenkins",
-            "tags": "jenkins"
+            "description": "Nexus",
+            "iconClass": "java",
+            "tags": "nexus"
         }
     },
     "objects": [
@@ -35,8 +35,8 @@
                     {
                         "name": "web",
                         "protocol": "TCP",
-                        "port": 8080,
-                        "targetPort": 8080,
+                        "port": 8081,
+                        "targetPort": 8081,
                         "nodePort": 0
                     }
                 ],
@@ -78,16 +78,7 @@
                         "kind": "ImageStreamTag",
                         "name": "${APPLICATION_NAME}:latest"
                     }
-                },
-                "triggers": [
-		            {
-		                "type": "ConfigChange"
-		            },
-                    {
-                        "type": "ImageChange",
-                        "imageChange": {}
-                    }
-                ]
+                }
             }
 		},
         {
@@ -175,26 +166,15 @@
                                 "ports": [
                                     {
                                         "name": "web",
-                                        "containerPort": 8080,
+                                        "containerPort": 8081,
                                         "protocol": "TCP"
-                                    },
-                                    {
-                                        "name": "slave",
-                                        "containerPort": 50000,
-                                        "protocol": "TCP"
-                                    }
-                                ],
-                                "env": [
-                                    {
-                                        "name": "JENKINS_PASSWORD",
-                                        "value": "${JENKINS_PASSWORD}"
                                     }
                                 ],
                                 "resources": {},
                                 "volumeMounts": [
                                     {
                                         "name": "${APPLICATION_NAME}-data",
-                                        "mountPath": "/var/lib/jenkins"
+                                        "mountPath": "/sonatype-work"
                                     }
                                 ],
                                 "terminationMessagePath": "/dev/termination-log",
@@ -214,8 +194,6 @@
                                 }
                             }
                         ],
-                        "serviceAccount": "${JENKINS_SERVICE_ACCOUNT}",
-                        "serviceAccountName": "${JENKINS_SERVICE_ACCOUNT}",
                         "restartPolicy": "Always",
                         "dnsPolicy": "ClusterFirst"
                     }
@@ -227,7 +205,7 @@
         {
             "name": "APPLICATION_NAME",
             "description": "Application Name",
-            "value": "jenkins"
+            "value": "nexus"
         },
         {
            "description": "Custom hostname.  Leave blank for default hostname, e.g.: <application-name>.<project>.<default-domain-suffix>",
@@ -235,25 +213,13 @@
            "displayName": "Application hostname"
         },
         {
-            "name": "JENKINS_PASSWORD",
-            "description": "Password for the Jenkins user",
-            "value": "password",
-            "generate": "expression"
-        },
-        {
-            "name": "JENKINS_SERVICE_ACCOUNT",
-            "description": "OpenShift Service account for Jenkins",
-            "value": "jenkins"
-        },
-        {
             "name": "VOLUME_CAPACITY",
             "description": "Volume space available for data, e.g. 512Mi, 2Gi",
-            "value": "512Mi",
+            "value": "2Gi",
             "required": true
         }
-
     ],
     "labels": {
-        "template": "jenkins-persistent"
+        "template": "nexus-persistent"
     }
 }

@@ -107,24 +107,7 @@
                         "kind": "ImageStreamTag",
                         "name": "${APPLICATION_NAME}:latest"
                     }
-                },
-                "triggers": [
-                    {
-                        "type": "GitHub",
-                        "github": {
-                            "secret": "${GITHUB_WEBHOOK_SECRET}"
-                        }
-                    },
-                    {
-                        "type": "Generic",
-                        "generic": {
-                            "secret": "${GENERIC_WEBHOOK_SECRET}"
-                        }
-                    },
-                    {
-                        "type": "ConfigChange"
-                    }
-                ]
+                }
             }
         },
 	{

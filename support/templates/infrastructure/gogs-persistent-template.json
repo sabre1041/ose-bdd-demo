@@ -2,11 +2,10 @@
     "kind": "Template",
     "apiVersion": "v1",
     "metadata": {
-        "name": "nexus-persistent",
+        "name": "gogs-persistent",
         "annotations": {
-            "description": "Jenkins",
-            "iconClass": "java",
-            "tags": "nexus"
+            "description": "Gogs",
+            "tags": "gogs"
         }
     },
     "objects": [
@@ -18,6 +17,17 @@
                 "labels": {
                     "application": "${APPLICATION_NAME}"
                 }
+            },
+            "spec": {
+                "tags": [
+                    {
+                        "name": "latest",
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "openshiftdemos/gogs:latest"
+                        }
+                    }
+                ]
             }
         },
         {
@@ -33,10 +43,10 @@
             "spec": {
                 "ports": [
                     {
-                        "name": "web",
+                        "name": "gogs",
                         "protocol": "TCP",
-                        "port": 8081,
-                        "targetPort": 8081,
+                        "port": 3000,
+                        "targetPort": 3000,
                         "nodePort": 0
                     }
                 ],
@@ -48,48 +58,6 @@
                 "sessionAffinity": "None"
             }
         },
-		{
-            "kind": "BuildConfig",
-            "apiVersion": "v1",
-            "metadata": {
-                "name": "${APPLICATION_NAME}",
-                "labels": {
-                    "application": "${APPLICATION_NAME}"
-                }
-            },
-            "spec": {
-                "source": {
-                    "type": "Binary",
-                    "binary": {
-                        "asFile": ""
-                    }
-                },
-                "strategy": {
-                    "type": "Docker",
-                    "dockerStrategy": {
-                        "from": {
-                            "kind": "ImageStreamTag",
-                            "name": "rhel7:latest"
-                        }
-                    }
-                },
-                "output": {
-                    "to": {
-                        "kind": "ImageStreamTag",
-                        "name": "${APPLICATION_NAME}:latest"
-                    }
-                },
-                "triggers": [
-		            {
-		                "type": "ConfigChange"
-		            },
-                    {
-                        "type": "ImageChange",
-                        "imageChange": {}
-                    }
-                ]
-            }
-		},
         {
             "kind": "Route",
             "apiVersion": "v1",
@@ -174,16 +142,27 @@
                                 "image": "${APPLICATION_NAME}",
                                 "ports": [
                                     {
-                                        "name": "web",
-                                        "containerPort": 8081,
+                                        "name": "gogs",
+                                        "containerPort": 3000,
                                         "protocol": "TCP"
                                     }
                                 ],
+                                "readinessProbe": {
+                                    "httpGet": {
+                                        "port": 3000,
+                                        "path": "/"
+                                    },
+                                    "initialDelaySeconds": 5,
+                                    "timeoutSeconds": 1,
+                                    "periodSeconds": 10,
+                                    "successThreshold": 1,
+                                    "failureThreshold": 3
+                                },
                                 "resources": {},
                                 "volumeMounts": [
                                     {
                                         "name": "${APPLICATION_NAME}-data",
-                                        "mountPath": "/sonatype-work"
+                                        "mountPath": "/home/gogs/gogs-repositories"
                                     }
                                 ],
                                 "terminationMessagePath": "/dev/termination-log",
@@ -214,7 +193,7 @@
         {
             "name": "APPLICATION_NAME",
             "description": "Application Name",
-            "value": "nexus"
+            "value": "gogs"
         },
         {
            "description": "Custom hostname.  Leave blank for default hostname, e.g.: <application-name>.<project>.<default-domain-suffix>",
@@ -229,6 +208,6 @@
         }
     ],
     "labels": {
-        "template": "nexus-persistent"
+        "template": "gogs-template"
     }
 }
