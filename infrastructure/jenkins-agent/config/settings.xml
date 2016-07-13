@@ -195,7 +195,7 @@ under the License.
       <id>nexus</id>
 
       <properties>
-        <altDeploymentRepository>nexus::default::http://${env.NEXUS_SERVICE_HOST}:${env.NEXUS_SERVICE_PORT}/content/repositories/snapshots/</altDeploymentRepository>
+        <altDeploymentRepository>nexus::default::http://${env.NEXUS_SERVICE_HOST}:${env.NEXUS_SERVICE_PORT}/content/repositories/releases/</altDeploymentRepository>
         <altReleaseDeploymentRepository>nexus::default::http://${env.NEXUS_SERVICE_HOST}:${env.NEXUS_SERVICE_PORT}/content/repositories/releases/</altReleaseDeploymentRepository>
         <altSnapshotDeploymentRepository>nexus::default::http://${env.NEXUS_SERVICE_HOST}:${env.NEXUS_SERVICE_PORT}/content/repositories/snapshots/</altSnapshotDeploymentRepository>
       </properties>

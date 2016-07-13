@@ -22,19 +22,21 @@ rm jboss-brms*
 
 mkdir $HOME/gitrepo
 mkdir $HOME/tmprepo
-mv /tmp/src/rules/.niogit $HOME/tmprepo/.
 
-mv /tmp/src/hookScripts/prepopulateNioGit.sh $HOME/.
+mv /tmp/src/hookScripts/initRepo.sh $HOME/.
 
-chmod 777 $HOME/prepopulateNioGit.sh
+chmod 777 $HOME/initRepo.sh
 
-mv /tmp/src/hookScripts/initNexusDeploy.sh $HOME/.
+mkdir -p $HOME/git-templates/hooks
 
-chmod 777 $HOME/initNexusDeploy.sh
+git config --global init.templatedir '$HOME/git-templates'
 
-mv /tmp/src/conf/settings.xml $HOME/.
+mv /tmp/src/hookScripts/post-commit $HOME/git-templates/hooks/post-commit
+
+chmod 777 $HOME/git-templates/hooks/post-commit
 
 # Call default assemble script
 /usr/local/s2i/assemble
 
 rm -rf $HOME/.m2
+

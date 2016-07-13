@@ -1,1 +1,0 @@
-curl -X POST http://$BUSINESS_CENTRAL_SERVICE_HOST:$BUSINESS_CENTRAL_SERVICE_PORT/business-central/rest/repositories/coolstore/projects/coolstore/maven/deploy -u $BUSINESS_CENTRAL_USER:$BUSINESS_CENTRAL_PASSWORD
