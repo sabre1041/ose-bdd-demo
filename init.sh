@@ -24,7 +24,7 @@ POSTGRESQL_DATABASE="gogs"
 GOGS_ADMIN_USER="gogs"
 GOGS_ADMIN_PASSWORD="bddgogs"
 
-COOLSTORE_DEMO_PROJECT="brms-coolstore-demo"
+COOLSTORE_DEMO_PROJECT="angular-brms-coolstore-demo"
 COOLSTORE_KJAR_PROJECT="coolstore-kjar-s2i"
 
 
@@ -99,7 +99,7 @@ oc policy add-role-to-user edit system:serviceaccount:$OSE_CI_PROJECT:default -n
 
 
 # Process RHEL Template
-oc create -f"${SCRIPT_BASE_DIR}/support/templates/infrastructure/rhel7-is.json"
+oc create -f"${SCRIPT_BASE_DIR}/support/templates/infrastructure/rhel7-is.json" -n ${OSE_CI_PROJECT}
 
 # Import Upstream Image
 oc import-image rhel7
@@ -286,6 +286,12 @@ oc policy add-role-to-user edit system:serviceaccount:$OSE_BDD_DEV_PROJECT:defau
 
 # Grant Jenkins Service Account Access to Dev Project
 oc policy add-role-to-user edit system:serviceaccount:$OSE_CI_PROJECT:default -n ${OSE_BDD_DEV_PROJECT}
+
+echo
+echo "Creating nodejs ImageStream in ${OSE_BDD_DEV_PROJECT}..."
+echo
+oc create -f"${SCRIPT_BASE_DIR}/support/templates/infrastructure/nodejs-is.json" -n ${OSE_BDD_DEV_PROJECT}
+
 
 echo
 echo "Creating Coolstore App in ${OSE_BDD_DEV_PROJECT}..."
