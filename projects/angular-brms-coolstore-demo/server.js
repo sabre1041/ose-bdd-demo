@@ -4,9 +4,9 @@ var http = require("http");
 var app = express();
 
 //Load Environment Variables
-var hostname=process.env.KIE_SERVER_NAMESPACE;
+var namespace=process.env.KIE_SERVER_NAMESPACE;
 var port=process.env.KIE_SERVER_PORT;
-var containerName=process.env.KIE_SERVER_APP_NAME;
+var appname=process.env.KIE_SERVER_APP_NAME;
 var username=process.env.KIE_SERVER_USER;
 var password=process.env.KIE_SERVER_PASSWORD;
 
@@ -24,17 +24,17 @@ app.get('/*',function(req,res){
 //Handle API calls
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.post('/api/v1/rest/checkout', function (req, res) {
+app.post('/api/v1/rest/checkout', function (req, response) {
 	reqString = generateRequestString(req);
 	var options = {
-	  hostname: hostname,
+	  hostname: appname + '.' + namespace + '.svc.cluster.local',
 	  port: port,
-	  path: '/kie-server/services/rest/server/containers/instances/'+containerName,
+	  path: '/kie-server/services/rest/server/containers/instances/default',
 	  method: 'POST',
 	  headers: {
 	      'Content-Type': 'application/json',
 	      "X-KIE-ContentType": "JSON",
-	      "Authorization": auth
+	      "Authorization": auth,
 	  }
 	};
 	var req = http.request(options, function(res) {
@@ -43,14 +43,15 @@ app.post('/api/v1/rest/checkout', function (req, res) {
 		res.setEncoding('utf8');
 		res.on('data', function (body) {
 			console.log('Body: ' + body);
+			response.send(body);
 	  	});
 	});
 	req.on('error', function(e) {
 		console.log('problem with request: ' + e.message);
+		response.status(500).send('Error contacting kie server');
 	});
 	req.write(reqString);
 	req.end();
-
 });
 
 app.listen(8080, function () {
