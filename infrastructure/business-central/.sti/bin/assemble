@@ -38,3 +38,4 @@ mv /tmp/src/conf/settings.xml $HOME/.
 /usr/local/s2i/assemble
 
 rm -rf $HOME/.m2
+

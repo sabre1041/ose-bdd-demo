@@ -258,6 +258,22 @@ echo "Adding environment variables to Jenkins..."
 echo
 #oc env dc/jenkins-agent KIE_SERVER_USER=${KIE_SERVER_USER} KIE_SERVER_PASSWORD=${KIE_SERVER_PASSWORD} -n $OSE_CI_PROJECT
 
+# Process eap-builder-with-git template
+echo
+echo "Processing eap with git builder image Template..."
+echo
+oc process -v APPLICATION_NAME=eap-builder-with-git -f "${SCRIPT_BASE_DIR}/support/templates/infrastructure/eap-builder-with-git-template.json" | oc create -n ${OSE_CI_PROJECT} -f -
+
+echo
+echo "Starting eap with git builder binary build..."
+echo
+oc start-build eap-builder-with-git --from-dir="${SCRIPT_BASE_DIR}/infrastructure/eap-builder-with-git"
+
+wait_for_running_build "eap-builder-with-git" "${OSE_CI_PROJECT}"
+
+oc build-logs -n ${OSE_CI_PROJECT} -f eap-builder-with-git-1
+
+
 # Process Business-Central Template
 echo
 echo "Processing Business Central Template..."

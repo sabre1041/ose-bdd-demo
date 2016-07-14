@@ -86,8 +86,7 @@
                         "forcePull": true,
                         "from": {
                             "kind": "ImageStreamTag",
-                            "namespace": "${IMAGE_STREAM_NAMESPACE}",
-                            "name": "jboss-eap64-openshift:1.2"
+                            "name": "eap-builder-with-git:latest"
 			},
 			"env" : [
 				{
