@@ -1,0 +1,44 @@
+OpenShift Behavior Driven Development Demo - Demonstration Script
+=================================================================
+
+
+Overview
+========
+This document describes how to run the demonstration to highlight all the key technologies and concepts (refer to the README).
+This assumes that the project is up and running on a local machine as per the Runbook.
+
+
+Demo Agenda
+===========
+This section provides a high-level agenda for the demo. The paranthesis after each discuss what concepts are highlighted in that portion.
+
+1. Discuss what the application is. (BPMS, Behavior Driven Development)
+2. Show that the application is up and running in a stable state. (OpenShift Enterprise, Jenkins, CI/CD, DevOps)
+3. Change the business requirments. (Behavior Driven Development)
+4. Change the logic. (BRMS)
+5. See the changes get applied. (OpenShift Enterprise, CI/CD, DevOps)
+6. Deploy to a higher environment. (OpenShift Enterprise, CI/CD, DevOps)
+
+
+Step by Step Instructions
+=========================
+TODO: This section needs to be cleaned up and expanded upon
+
+This section provides a step-by-step guide on how to run the demonstration.
+
+1. Describe the application and use case.
+	a. Discuss the basic architecture of the application.
+	b. Mention how the application talks to BPMS.
+2. Show the application up and running in OpenShift Enterprise.
+3. Go over the Jenkins pipelines.
+	a. Show how Jenkins lets us deploy the application to environments.
+	b. Highlight that the build is currently stable.
+4. Change the business requirments.
+	a. Update the cost of shipping for orders under $25 in the BDD scenarions only.
+	b. Commit and push the new scenarios.
+	c. Watch the Jenkins builds now fail.
+5. Change the logic.
+	a. Now that we know our application doesn't match our requirements, fix the application.
+	b. Commit and push the changes.
+	c. Watch Jenkins pass.
+6. Once Jenkins is all green, we can deploy the application to higher environments (System testing, Production, etc.).
