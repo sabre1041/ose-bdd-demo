@@ -1,0 +1,4 @@
+node('ose-agent') {
+    
+   
+}
