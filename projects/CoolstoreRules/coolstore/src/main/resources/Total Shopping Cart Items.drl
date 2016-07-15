@@ -5,7 +5,7 @@ rule "Total Shopping Cart Items"
     no-loop true
     when
 	$sc : ShoppingCart( )
-	$sci : ShoppingCartItem( shoppingCart == $sc )
+	$sci : ShoppingCartItem( )
     then
 	$sc.setCartItemTotal( $sc.getCartItemTotal() + ($sci.getPrice() * $sci.getQuantity()));
 	$sc.setCartItemPromoSavings($sc.getCartItemPromoSavings() - ($sci.getPromoSavings() * $sci.getQuantity()));

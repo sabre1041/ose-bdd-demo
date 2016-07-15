@@ -1,0 +1,17 @@
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building coolstore 2.0.0
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-help-plugin:2.1.1:evaluate (default-cli) @ coolstore ---
+[INFO] No artifact parameter specified, using 'com.redhat:coolstore:kjar:2.0.0' as project.
+[INFO] 
+2.0.0
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 1.330 s
+[INFO] Finished at: 2016-07-15T04:30:27-04:00
+[INFO] Final Memory: 25M/205M
+[INFO] ------------------------------------------------------------------------

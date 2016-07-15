@@ -249,7 +249,6 @@ echo
 oc rsync -n $OSE_CI_PROJECT $SCRIPT_BASE_DIR/projects/$COOLSTORE_RULES_PROJECT $GOGS_POD:/tmp/
 oc rsh -n $OSE_CI_PROJECT -t $GOGS_POD bash -c "cd /tmp/$COOLSTORE_RULES_PROJECT && git init && git config --global user.email 'gogs@redhat.com' && git config --global user.name 'gogs' && git add . &&  git commit -m 'initial commit'"
 curl -H "Content-Type: application/json" -X POST -d "{\"clone_addr\": \"/tmp/$COOLSTORE_RULES_PROJECT\",\"uid\": 1,\"repo_name\": \"$COOLSTORE_RULES_PROJECT\"}" --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/migrate >/dev/null 2>&1
-curl -H "Content-Type: application/json" -X POST -d '{"type": "gogs","config": { "url": "http://admin:password@jenkins:8080/job/coolstore-rules-pipeline/buildWithParameters?delay=0", "content_type": "json" }, "active": true }' --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/gogs/$COOLSTORE_RULES_PROJECT/hooks
 
 echo
 echo "Setting up persistent gogs configuration..."
