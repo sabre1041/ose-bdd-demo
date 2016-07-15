@@ -5,6 +5,31 @@ Demonstration of how behavior driven development can be applied in a containeriz
 
 Please look at the README in docker/business-central/support and follow the instructions to aquire the BRMS deployable
 
+## Overview
+
+This project aims to demonstrate how CI/CD, DevOps and behavior driven development can be executed in a containerized environment. For the purposes of this demonstration, we will be using a rules-based application and seeing how this can be done with an application with externalized business logic.
+
+By combining the power of containerized environments and core DevOps concepts, we are able to control code quality while maintaining a rapid turnaround time to deploying the latest code additions to higher environments.
+
+## Core Technologies Demonstrated
+
+OpenShift Enterprise
+Docker
+Jenkins
+Cucumber
+Red Hat JBoss BRMS
+
+
+## Concepts Highlighted
+
+Cloud Based Architecture
+Platform as a Service
+DevOps
+Continuous Integration
+Continuous Delivery
+Behavior Driven Development
+Specification by Example
+
 
 ## Persistent Volume Requirements
 
