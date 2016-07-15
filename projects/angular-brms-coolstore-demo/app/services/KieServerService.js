@@ -11,9 +11,6 @@ module.factory('KieServerService', ['$http',function($http) {
 	return service;
 
 	function checkout(cart) {	
-	    console.log("Mock making call to Kie Server");
-	    console.log(cart);
-	    // Get environment variables to access kieserver
 	    var kieServerLocationUrl = '/api/v1/rest/checkout';
 
 	    return $http({
@@ -26,10 +23,13 @@ module.factory('KieServerService', ['$http',function($http) {
             },
 		    data: JSON.stringify(cart)
 		}).then(function(response) {
+			console.log(response);
 			return response;
+		},
+		function(error){
+			console.log(error);
+			return null;
 		});	
-
-		// return $http.post(kieServerLocationUrl, JSON.stringify(cart));
 	}
     
     
