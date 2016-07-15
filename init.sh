@@ -26,6 +26,7 @@ GOGS_ADMIN_PASSWORD="bddgogs"
 
 COOLSTORE_DEMO_PROJECT="angular-brms-coolstore-demo"
 COOLSTORE_KJAR_PROJECT="coolstore-kjar-s2i"
+COOLSTORE_RULES_PROJECT="CoolstoreRules"
 
 
 function wait_for_running_build() {
@@ -240,7 +241,14 @@ echo
 oc rsync -n $OSE_CI_PROJECT $SCRIPT_BASE_DIR/projects/$COOLSTORE_KJAR_PROJECT $GOGS_POD:/tmp/
 oc rsh -n $OSE_CI_PROJECT -t $GOGS_POD bash -c "cd /tmp/$COOLSTORE_KJAR_PROJECT && git init && git config --global user.email 'gogs@redhat.com' && git config --global user.name 'gogs' && git add . &&  git commit -m 'initial commit'"
 curl -H "Content-Type: application/json" -X POST -d "{\"clone_addr\": \"/tmp/$COOLSTORE_KJAR_PROJECT\",\"uid\": 1,\"repo_name\": \"$COOLSTORE_KJAR_PROJECT\"}" --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/migrate >/dev/null 2>&1
-curl -H "Content-Type: application/json" -X POST -d '{"type": "gogs","config": { "url": "http://admin:password@jenkins:8080/job/coolstore-rules-pipeline/buildWithParameters?delay=0", "content_type": "json" }, "active": true }' --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/gogs/$COOLSTORE_KJAR_PROJECT/hooks
+curl -H "Content-Type: application/json" -X POST -d '{"type": "gogs","config": { "url": "http://admin:password@jenkins:8080/job/coolstore-test-harness-pipeline/buildWithParameters?delay=0", "content_type": "json" }, "active": true }' --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/gogs/$COOLSTORE_KJAR_PROJECT/hooks
+
+echo
+echo "Setting up Coolstore Rules Project git repository..."
+echo
+oc rsync -n $OSE_CI_PROJECT $SCRIPT_BASE_DIR/projects/$COOLSTORE_RULES_PROJECT $GOGS_POD:/tmp/
+oc rsh -n $OSE_CI_PROJECT -t $GOGS_POD bash -c "cd /tmp/$COOLSTORE_RULES_PROJECT && git init && git config --global user.email 'gogs@redhat.com' && git config --global user.name 'gogs' && git add . &&  git commit -m 'initial commit'"
+curl -H "Content-Type: application/json" -X POST -d "{\"clone_addr\": \"/tmp/$COOLSTORE_RULES_PROJECT\",\"uid\": 1,\"repo_name\": \"$COOLSTORE_RULES_PROJECT\"}" --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/migrate >/dev/null 2>&1
 
 echo
 echo "Setting up persistent gogs configuration..."
@@ -257,6 +265,22 @@ echo
 echo "Adding environment variables to Jenkins..."
 echo
 #oc env dc/jenkins-agent KIE_SERVER_USER=${KIE_SERVER_USER} KIE_SERVER_PASSWORD=${KIE_SERVER_PASSWORD} -n $OSE_CI_PROJECT
+
+# Process eap-builder-with-git template
+echo
+echo "Processing eap with git builder image Template..."
+echo
+oc process -v APPLICATION_NAME=eap-builder-with-git -f "${SCRIPT_BASE_DIR}/support/templates/infrastructure/eap-builder-with-git-template.json" | oc create -n ${OSE_CI_PROJECT} -f -
+
+echo
+echo "Starting eap with git builder binary build..."
+echo
+oc start-build eap-builder-with-git --from-dir="${SCRIPT_BASE_DIR}/infrastructure/eap-builder-with-git"
+
+wait_for_running_build "eap-builder-with-git" "${OSE_CI_PROJECT}"
+
+oc build-logs -n ${OSE_CI_PROJECT} -f eap-builder-with-git-1
+
 
 # Process Business-Central Template
 echo

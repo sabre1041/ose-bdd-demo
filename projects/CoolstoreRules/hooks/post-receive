@@ -1,0 +1,8 @@
+#!/bin/bash
+while read oldrev newrev refname
+do
+    branch=$(git rev-parse --symbolic --abbrev-ref $refname)
+    if [ "deployments" == "$branch" ]; then
+        curl -X POST http://admin:password@jenkins:8080/job/coolstore-rules-pipeline/buildWithParameters?delay=0
+    fi
+done
