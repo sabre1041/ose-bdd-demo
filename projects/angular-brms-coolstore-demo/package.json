@@ -1,7 +1,7 @@
 {
   "name": "brms-coolstore-demo",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A simple store app",
   "license": "MIT",
   "devDependencies": {

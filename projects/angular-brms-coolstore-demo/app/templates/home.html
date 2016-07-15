@@ -22,7 +22,6 @@
       <td>
         <button ng-click="addToCart(item)"class="btn btn-default" type="button"> <span class="pficon-add-circle-o"></span></button>
       </td>
-      
     </tr>
   </tbody>
 </table>
@@ -37,4 +36,26 @@
     <button ng-click="checkout()"class="btn btn-default" type="button">CHECKOUT</button>
   </li>
 </ul>
+<!-- Total -->
+<h2>Totals</h2>
+<table class="table table-striped table-bordered">
+  <tbody>
+    <tr>
+      <td>Cart Subtotal</td>
+      <td>${{resolvedCart.cartItemTotal.toFixed(2) || 0.00}}</td>
+    </tr>
+    <tr>
+      <td>Shipping</td>
+      <td>${{resolvedCart.shippingTotal.toFixed(2) || 0.00}} </td>
+    </tr>
+    <tr>
+      <td>Promotion Discounts</td>
+      <td>${{resolvedCart.shippingPromoSavings.toFixed(2) || 0.00}}</td>
+    </tr>
+    <tr>
+      <td>Total</td>
+      <td>${{resolvedCart.cartTotal.toFixed(2) || 0.00}}</td>
+    </tr>
+  </tbody>
+</table>
 </div>

@@ -10,6 +10,7 @@ var homeModule = angular.module("homeModule",[]);
 
 homeModule.controller("HomeCtrl", ["$scope","$http","KieServerService",function($scope,$http,kieSvrSvc) {
 	$scope.cart = [];
+  $scope.resolvedCart={};
 	var jsonString = 
 					'{"items": [{"id": 1,"name": "Red Hat Thermos","price": 14.95, "image": "https://lf.staplespromotionalproducts.com/lf?set=scale[300],env[live],output_format[png],sku_number[200231581],sku_dir[200231],view_code[F1]%26call=url[file:san/com/sku.chain]", "description": "BPA/BPS-free polypropylene cup and lid with silicone grip. Flip up closure on lid; barista standard reusable cup; recyclable. Holds 12 oz. Imprint. Gray/Black/Red."},\
 								{"id": 2,"name": "Red Hat Golf Polo","price": 55.95, "image": "https://lf.staplespromotionalproducts.com/lf?set=scale[300],env[live],output_format[png],sku_number[200231303],sku_dir[200231],view_code[F1]%26call=url[file:san/com/sku.chain]", "description": "Moisture-wicking, snag resistant, 4.4 oz., 100% micropolyester textured knit. Flat-knit collar; three-button placket with dyed to match buttons; contrast neck tape; shirttail hem. Import. Steel Gray. Transfer."},\
@@ -34,7 +35,21 @@ homeModule.controller("HomeCtrl", ["$scope","$http","KieServerService",function(
     
     $scope.checkout = function(){
       console.log("Checkout")
-      kieSvrSvc.checkout($scope.cart);
+      kieSvrSvc.checkout($scope.cart).then(function(data){
+        //Check valid response
+        if(!data || !data['data']['result']){
+          $scope.resolvedCart={};
+        }
+        else{
+          //Parse out \n from response and convert to JSON obj (defensive check)
+          var result = data['data']['result'];
+          result = result.replace(/\n/g,"");
+          result=JSON.parse(result);
+          console.log(result);
+          $scope.resolvedCart=result['results'][1]['value']['com.redhat.coolstore.ShoppingCart'];    
+        }
+        
+      });
     }
 
 }]);
