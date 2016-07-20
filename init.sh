@@ -4,29 +4,38 @@ set -e
 
 SCRIPT_BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-
-OSE_CI_PROJECT="ci"
-OSE_BDD_DEV_PROJECT="coolstore-bdd-dev"
-OSE_BDD_PROD_PROJECT="coolstore-bdd-prod"
+# OSE Login
 OSE_CLI_USER="admin"
 OSE_CLI_PASSWORD="admin"
 OSE_CLI_HOST="https://10.1.2.2:8443"
+
+# OpenShift Projects
+OSE_CI_PROJECT="ci"
+OSE_BDD_DEV_PROJECT="coolstore-bdd-dev"
+OSE_BDD_PROD_PROJECT="coolstore-bdd-prod"
+
+#BRMS
 KIE_SERVER_USER="kieserver"
 KIE_SERVER_PASSWORD="bdddemo1!"
-KIE_CONTAINER="default=com.redhat:coolstore:2.0.0"
+
+# Jenkins
 JENKINS_USER="admin"
 JENKINS_DSL_JOB="bdd-coolstore-dsl"
+COOLSTORE_TEST_HARNESS_JOB="coolstore-test-harness-pipeline"
 CRUMB_ISSUER_URL='crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)'
 
+# Gogs and PostgreSQL Credentials
+GOGS_ADMIN_USER="gogs"
+GOGS_ADMIN_PASSWORD="bddgogs"
 POSTGRESQL_USER="postgresql"
 POSTGRESQL_PASSWORD="password"
 POSTGRESQL_DATABASE="gogs"
-GOGS_ADMIN_USER="gogs"
-GOGS_ADMIN_PASSWORD="bddgogs"
 
-COOLSTORE_DEMO_PROJECT="angular-brms-coolstore-demo"
-COOLSTORE_KJAR_PROJECT="coolstore-kjar-s2i"
-COOLSTORE_RULES_PROJECT="CoolstoreRules"
+# Gogs Projects
+COOLSTORE_APP_PROJECT="coolstore-app"
+COOLSTORE_TEST_HARNESS_PROJECT="coolstore-test-harness"
+COOLSTORE_RULES_PROJECT="coolstore-rules"
+CI_PROJECT="ci"
 
 
 function wait_for_running_build() {
@@ -70,6 +79,49 @@ function wait_for_endpoint_registration() {
     done
 
     set -e
+}
+
+function execute_jenkins_job() {
+    JENKINS_HOST=$1
+    JENKINS_JOB=$2
+    PARAMETER_BUILD=$3
+    
+    if [ -z $PARAMETER_BUILD ]; then
+        PARAMETER_BUILD_CONTEXT="build"
+    else
+        PARAMETER_BUILD_CONTEXT="buildWithParameters"
+    fi
+    
+    
+    echo
+    echo "Running Jenkins job ${JENKINS_JOB}..."
+    echo
+    
+    curl -X POST http://${JENKINS_HOST}/job/${JENKINS_JOB}/${PARAMETER_BUILD_CONTEXT} --user "${JENKINS_USER}:${JENKINS_PASSWORD}"
+
+    sleep 10
+    
+    echo "Waiting for ${JENKINS_JOB} job to complete..."
+    echo
+
+    while true
+    do
+        BUILD_STATUS=$(curl -s http://${JENKINS_HOST}/job/${JENKINS_JOB}/lastBuild/api/json?pretty=true --user "${JENKINS_USER}:${JENKINS_PASSWORD}" | grep \"result\" | awk '{print $3}'
+    )
+        if [[ $BUILD_STATUS == *"SUCCESS"* ]]
+        then
+            echo "Build completed successfully!"
+            break
+        elif [[ $BUILD_STATUS == *"FAILURE"* ]]
+        then
+            echo "Build Failed"
+            exit 1
+        fi
+
+        sleep 5
+
+    done
+    
 }
 
 
@@ -228,27 +280,43 @@ echo
 sleep 10
 
 echo
-echo "Setting up Coolstore Demo Project git repository..."
+echo "Setting up Coolstore App Project git repository..."
 echo
-oc rsync -n $OSE_CI_PROJECT $SCRIPT_BASE_DIR/projects/$COOLSTORE_DEMO_PROJECT $GOGS_POD:/tmp/ 
-oc rsh -n $OSE_CI_PROJECT -t $GOGS_POD bash -c "cd /tmp/$COOLSTORE_DEMO_PROJECT && git init && git config --global user.email 'gogs@redhat.com' && git config --global user.name 'gogs' && git add . &&  git commit -m 'initial commit'"
-curl -H "Content-Type: application/json" -X POST -d "{\"clone_addr\": \"/tmp/$COOLSTORE_DEMO_PROJECT\",\"uid\": 1,\"repo_name\": \"$COOLSTORE_DEMO_PROJECT\"}" --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/migrate
-curl -H "Content-Type: application/json" -X POST -d '{"type": "gogs","config": { "url": "http://admin:password@jenkins:8080/job/coolstore-app-pipeline/buildWithParameters?delay=0", "content_type": "json" }, "active": true }' --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/gogs/$COOLSTORE_DEMO_PROJECT/hooks
+oc rsync -n $OSE_CI_PROJECT $SCRIPT_BASE_DIR/projects/$COOLSTORE_APP_PROJECT $GOGS_POD:/tmp/ 
+oc rsh -n $OSE_CI_PROJECT -t $GOGS_POD bash -c "cd /tmp/$COOLSTORE_APP_PROJECT && git init && git config --global user.email 'gogs@redhat.com' && git config --global user.name 'gogs' && git add . &&  git commit -m 'initial commit'"
+curl -H "Content-Type: application/json" -X POST -d "{\"clone_addr\": \"/tmp/$COOLSTORE_APP_PROJECT\",\"uid\": 1,\"repo_name\": \"$COOLSTORE_APP_PROJECT\"}" --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/migrate
+curl -H "Content-Type: application/json" -X POST -d '{"type": "gogs","config": { "url": "http://admin:password@jenkins:8080/job/coolstore-app-pipeline/buildWithParameters?delay=0", "content_type": "json" }, "active": true }' --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/gogs/$COOLSTORE_APP_PROJECT/hooks
 
 echo
-echo "Setting up Coolstore KJAR Project git repository..."
+echo "Setting up Coolstore Test Harness Project git repository..."
 echo
-oc rsync -n $OSE_CI_PROJECT $SCRIPT_BASE_DIR/projects/$COOLSTORE_KJAR_PROJECT $GOGS_POD:/tmp/
-oc rsh -n $OSE_CI_PROJECT -t $GOGS_POD bash -c "cd /tmp/$COOLSTORE_KJAR_PROJECT && git init && git config --global user.email 'gogs@redhat.com' && git config --global user.name 'gogs' && git add . &&  git commit -m 'initial commit'"
-curl -H "Content-Type: application/json" -X POST -d "{\"clone_addr\": \"/tmp/$COOLSTORE_KJAR_PROJECT\",\"uid\": 1,\"repo_name\": \"$COOLSTORE_KJAR_PROJECT\"}" --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/migrate >/dev/null 2>&1
-curl -H "Content-Type: application/json" -X POST -d '{"type": "gogs","config": { "url": "http://admin:password@jenkins:8080/job/coolstore-test-harness-pipeline/buildWithParameters?delay=0", "content_type": "json" }, "active": true }' --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/gogs/$COOLSTORE_KJAR_PROJECT/hooks
+oc rsync -n $OSE_CI_PROJECT $SCRIPT_BASE_DIR/projects/$COOLSTORE_TEST_HARNESS_PROJECT $GOGS_POD:/tmp/
+oc rsh -n $OSE_CI_PROJECT -t $GOGS_POD bash -c "cd /tmp/$COOLSTORE_TEST_HARNESS_PROJECT && git init && git config --global user.email 'gogs@redhat.com' && git config --global user.name 'gogs' && git add . &&  git commit -m 'initial commit'"
+curl -H "Content-Type: application/json" -X POST -d "{\"clone_addr\": \"/tmp/$COOLSTORE_TEST_HARNESS_PROJECT\",\"uid\": 1,\"repo_name\": \"$COOLSTORE_TEST_HARNESS_PROJECT\"}" --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/migrate >/dev/null 2>&1
+curl -H "Content-Type: application/json" -X POST -d '{"type": "gogs","config": { "url": "http://admin:password@jenkins:8080/job/coolstore-test-harness-pipeline/buildWithParameters?delay=0", "content_type": "json" }, "active": true }' --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/gogs/$COOLSTORE_TEST_HARNESS_PROJECT/hooks
+
+# Setup Git Hook in Rules Project
+cp -f ${SCRIPT_BASE_DIR}/support/scripts/post-receive-coolstore-rules ${SCRIPT_BASE_DIR}/projects/$COOLSTORE_RULES_PROJECT/post-receive
 
 echo
 echo "Setting up Coolstore Rules Project git repository..."
 echo
 oc rsync -n $OSE_CI_PROJECT $SCRIPT_BASE_DIR/projects/$COOLSTORE_RULES_PROJECT $GOGS_POD:/tmp/
-oc rsh -n $OSE_CI_PROJECT -t $GOGS_POD bash -c "cd /tmp/$COOLSTORE_RULES_PROJECT && git init && git config --global user.email 'gogs@redhat.com' && git config --global user.name 'gogs' && git add . &&  git commit -m 'initial commit'"
+oc rsh -n $OSE_CI_PROJECT -t $GOGS_POD bash -c "cd /tmp/$COOLSTORE_RULES_PROJECT && git init && mv post-receive /tmp/ && git config --global user.email 'gogs@redhat.com' && git config --global user.name 'gogs' && git add . &&  git commit -m 'initial commit'"
 curl -H "Content-Type: application/json" -X POST -d "{\"clone_addr\": \"/tmp/$COOLSTORE_RULES_PROJECT\",\"uid\": 1,\"repo_name\": \"$COOLSTORE_RULES_PROJECT\"}" --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/migrate >/dev/null 2>&1
+sleep 10
+oc rsh -n $OSE_CI_PROJECT -t $GOGS_POD bash -c "mv /tmp/post-receive /home/gogs/gogs-repositories/gogs/$COOLSTORE_RULES_PROJECT.git/hooks/ && chmod +x /home/gogs/gogs-repositories/gogs/$COOLSTORE_RULES_PROJECT.git/hooks/post-receive"
+
+rm -f ${SCRIPT_BASE_DIR}/projects/$COOLSTORE_RULES_PROJECT/post-receive
+
+echo
+echo "Setting up ci git repository..."
+echo
+oc rsync -n $OSE_CI_PROJECT $SCRIPT_BASE_DIR/projects/$CI_PROJECT $GOGS_POD:/tmp/
+oc rsh -n $OSE_CI_PROJECT -t $GOGS_POD bash -c "cd /tmp/$CI_PROJECT && git init && git config --global user.email 'gogs@redhat.com' && git config --global user.name 'gogs' && git add . &&  git commit -m 'initial commit'"
+curl -H "Content-Type: application/json" -X POST -d "{\"clone_addr\": \"/tmp/$CI_PROJECT\",\"uid\": 1,\"repo_name\": \"$CI_PROJECT\"}" --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/migrate >/dev/null 2>&1
+curl -H "Content-Type: application/json" -X POST -d '{"type": "gogs","config": { "url": "http://admin:password@jenkins:8080/job/bdd-coolstore-dsl/buildWithParameters?delay=0", "content_type": "json" }, "active": true }' --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/gogs/$CI_PROJECT/hooks
+
 
 echo
 echo "Setting up persistent gogs configuration..."
@@ -259,12 +327,6 @@ oc rsync -n ${OSE_CI_PROJECT} $GOGS_POD:/etc/gogs installgogs/
 oc secrets new gogs-config -n ${OSE_CI_PROJECT} $SCRIPT_BASE_DIR/installgogs/gogs/conf
 oc volume dc/gogs -n ${OSE_CI_PROJECT} --add --overwrite --name=config-volume -m /etc/gogs/conf/ --type=secret --secret-name=gogs-config >/dev/null 2>&1
 rm -rf $SCRIPT_BASE_DIR/installgogs
-
-# Update Jenkins with Environment Variables
-echo
-echo "Adding environment variables to Jenkins..."
-echo
-#oc env dc/jenkins-agent KIE_SERVER_USER=${KIE_SERVER_USER} KIE_SERVER_PASSWORD=${KIE_SERVER_PASSWORD} -n $OSE_CI_PROJECT
 
 # Process eap-builder-with-git template
 echo
@@ -379,25 +441,12 @@ echo
 
 JENKINS_PASSWORD=$(oc env dc/jenkins -n $OSE_CI_PROJECT --list | grep JENKINS_PASSWORD | cut -d'=' -f2)
 JENKINS_HOST=$(oc get route jenkins -n $OSE_CI_PROJECT --template='{{ .spec.host }}')
-curl -X POST http://${JENKINS_HOST}/job/${JENKINS_DSL_JOB}/build --user "${JENKINS_USER}:${JENKINS_PASSWORD}"
 
 sleep 10
 
-while true
-do
-    BUILD_STATUS=$(curl -s http://${JENKINS_HOST}/job/${JENKINS_DSL_JOB}/lastBuild/api/json?pretty=true --user "${JENKINS_USER}:${JENKINS_PASSWORD}" | grep \"result\" | awk '{print $3}'
-)
-    if [[ $BUILD_STATUS == *"SUCCESS"* ]]
-    then
-        break
-    elif [[ $BUILD_STATUS == *"FAILED"* ]]
-    then
-        echo "Build Failed"
-        exit 1
-    fi
+execute_jenkins_job "${JENKINS_HOST}" "${JENKINS_DSL_JOB}"
 
-done
-
+execute_jenkins_job "${JENKINS_HOST}" "${COOLSTORE_TEST_HARNESS_JOB}" "true"
 
 echo
 echo "Setup Complete"

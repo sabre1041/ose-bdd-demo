@@ -22,6 +22,6 @@ curl -i \
     -H "Content-Type: application/json" \
     --user $BUSINESS_CENTRAL_USER:$BUSINESS_CENTRAL_PASSWORD \
     -X POST \
-    -d '{"name":"coolstore","description":"repo for coolstore rules","requestType":"clone","gitURL":"http://gogs:bddgogs@gogs:3000/gogs/CoolstoreRules.git","organizationalUnitName":"coolstore"}' \
+    -d '{"name":"coolstore","description":"repo for coolstore rules","requestType":"clone","gitURL":"http://gogs:bddgogs@gogs:3000/gogs/coolstore-rules.git","organizationalUnitName":"coolstore"}' \
     http://business-central:8080/business-central/rest/repositories
 
