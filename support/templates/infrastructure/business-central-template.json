@@ -116,22 +116,8 @@
 					"intervalSeconds": 1,
 					"timeoutSeconds": 600,
 					"maxUnavailable": "0%",
-					"maxSurge": "20%",
+					"maxSurge": "20%"
 
-					"post": {
-						"failurePolicy": "Ignore",
-						"execNewPod": {
-							"containerName": "${APPLICATION_NAME}",
-							"command": ["/bin/bash", "/home/jboss/initRepo.sh"],
-							"env": [{
-								"name": "BUSINESS_CENTRAL_USER",
-								"value": "${BUSINESS_CENTRAL_USER}"
-							}, {
-								"name": "BUSINESS_CENTRAL_PASSWORD",
-								"value": "${BUSINESS_CENTRAL_PASSWORD}"
-							}]
-						}
-					}
 				},
 				"resources": {}
 			},
@@ -173,9 +159,10 @@
 								"command": [
 									"/bin/bash",
 									"-c",
-									"/opt/eap/bin/readinessProbe.sh"
+									"$HOME/initRepoReadiness.sh"
 								]
-							}
+							},
+							"timeoutSeconds":30
 						},
 						"ports": [{
 							"name": "jolokia",

@@ -302,7 +302,7 @@ echo
 echo "Setting up Coolstore Rules Project git repository..."
 echo
 oc rsync -n $OSE_CI_PROJECT $SCRIPT_BASE_DIR/projects/$COOLSTORE_RULES_PROJECT $GOGS_POD:/tmp/
-oc rsh -n $OSE_CI_PROJECT -t $GOGS_POD bash -c "cd /tmp/$COOLSTORE_RULES_PROJECT && git init && mv post-receive /tmp/ && git config --global user.email 'gogs@redhat.com' && git config --global user.name 'gogs' && git add . &&  git commit -m 'initial commit'"
+oc rsh -n $OSE_CI_PROJECT -t $GOGS_POD bash -c "cd /tmp/$COOLSTORE_RULES_PROJECT && git init && mv post-receive /tmp/ && git config --global user.email 'gogs@redhat.com' && git config --global user.name 'gogs' && git add . &&  git commit -m 'initial commit' && git branch deployments"
 curl -H "Content-Type: application/json" -X POST -d "{\"clone_addr\": \"/tmp/$COOLSTORE_RULES_PROJECT\",\"uid\": 1,\"repo_name\": \"$COOLSTORE_RULES_PROJECT\"}" --user $GOGS_ADMIN_USER:$GOGS_ADMIN_PASSWORD http://$GOGS_ROUTE/api/v1/repos/migrate >/dev/null 2>&1
 sleep 10
 oc rsh -n $OSE_CI_PROJECT -t $GOGS_POD bash -c "mv /tmp/post-receive /home/gogs/gogs-repositories/gogs/$COOLSTORE_RULES_PROJECT.git/hooks/ && chmod +x /home/gogs/gogs-repositories/gogs/$COOLSTORE_RULES_PROJECT.git/hooks/post-receive"
