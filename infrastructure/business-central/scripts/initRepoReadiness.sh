@@ -1,44 +1,47 @@
 #!/bin/bash
 
-
-#running eap provided readiness probe
+GIT_REPO=$HOME/gitrepo/.niogit/coolstore.git
 
 bash -c /opt/eap/bin/readinessProbe.sh &> /dev/null
 
 if [ $? == 0 ]; then
 
-echo "EAP provided readiness probe passed"
-echo "creating organizational unit"
+    if [ ! -d "$GIT_REPO" ]; then
 
-curl -i \
-    -H "Accept: application/json" \
-    -H "Content-Type: application/json" \
-    --user $BUSINESS_CENTRAL_USER:$BUSINESS_CENTRAL_PASSWORD \
-    -X POST \
-    -d '{"name":"coolstore","defaultGroupId":"coolstore", "owner":"redhat"}' \
-    http://$HOSTNAME:8080/business-central/rest/organizationalunits
+      echo "EAP provided readiness probe passed"
+      echo "creating organizational unit"
 
-#Sleeping to give time for organizational unit to be created since it is asyncronous
+      curl -i \
+        -H "Accept: application/json" \
+        -H "Content-Type: application/json" \
+        --user $BUSINESS_CENTRAL_USER:$BUSINESS_CENTRAL_PASSWORD \
+        -X POST \
+        -d '{"name":"coolstore","defaultGroupId":"coolstore", "owner":"redhat"}' \
+        http://$HOSTNAME:8080/business-central/rest/organizationalunits
 
-sleep 5s
+      #Sleeping to give time for organizational unit to be created since it is asyncronous
 
-echo "cloning coolstore repo from gogs"
+      sleep 5s
 
-curl -i \
-    -H "Accept: application/json" \
-    -H "Content-Type: application/json" \
-    --user $BUSINESS_CENTRAL_USER:$BUSINESS_CENTRAL_PASSWORD \
-    -X POST \
-    -d '{"name":"coolstore","description":"repo for coolstore rules","requestType":"clone","gitURL":"http://gogs:bddgogs@gogs:3000/gogs/coolstore-rules.git","organizationalUnitName":"coolstore"}' \
-    http://$HOSTNAME:8080/business-central/rest/repositories
+      echo "cloning coolstore repo from gogs"
+
+      curl -i \
+        -H "Accept: application/json" \
+        -H "Content-Type: application/json" \
+        --user $BUSINESS_CENTRAL_USER:$BUSINESS_CENTRAL_PASSWORD \
+        -X POST \
+        -d '{"name":"coolstore","description":"repo for coolstore rules","requestType":"clone","gitURL":"http://gogs:bddgogs@gogs:3000/gogs/coolstore-rules.git","organizationalUnitName":"coolstore"}' \
+        http://$HOSTNAME:8080/business-central/rest/repositories
 
 
-sleep 10s
+      sleep 10s
 
-mv $HOME/post-commit $HOME/gitrepo/.niogit/coolstore.git/hooks/.
+      mv $HOME/post-commit $HOME/gitrepo/.niogit/coolstore.git/hooks/.
+
+  fi
 
 else
-
-exit 1
+    
+  exit 1
 
 fi
