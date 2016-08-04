@@ -23,17 +23,13 @@ rm jboss-brms*
 mkdir $HOME/gitrepo
 mkdir $HOME/tmprepo
 
-mv /tmp/src/hookScripts/initRepo.sh $HOME/.
+mv /tmp/src/scripts/initRepoReadiness.sh $HOME/.
 
-chmod 777 $HOME/initRepo.sh
+chmod 777 $HOME/initRepoReadiness.sh
 
-mkdir -p $HOME/git-templates/hooks
+mv /tmp/src/scripts/post-commit $HOME/post-commit
 
-git config --global init.templatedir '$HOME/git-templates'
-
-mv /tmp/src/hookScripts/post-commit $HOME/git-templates/hooks/post-commit
-
-chmod 777 $HOME/git-templates/hooks/post-commit
+chmod 777 $HOME/post-commit
 
 # Call default assemble script
 /usr/local/s2i/assemble
