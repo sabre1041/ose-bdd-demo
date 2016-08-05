@@ -10,11 +10,11 @@ This assumes that the project is up and running on a local machine as per the Ru
 
 Demo Agenda
 ===========
-This section provides a high-level agenda for the demo. The paranthesis after each discuss what concepts are highlighted in that portion.
+This section provides a high-level agenda for the demo. The parenthesis after each discuss what concepts are highlighted in that portion.
 
 1. Discuss what the application is. (BPMS, Behavior Driven Development)
 2. Show that the application is up and running in a stable state. (OpenShift Enterprise, Jenkins, CI/CD, DevOps)
-3. Change the business requirments. (Behavior Driven Development)
+3. Change the business requirements. (Behavior Driven Development)
 4. Change the logic. (BRMS)
 5. See the changes get applied. (OpenShift Enterprise, CI/CD, DevOps)
 6. Deploy to a higher environment. (OpenShift Enterprise, CI/CD, DevOps)
@@ -26,19 +26,60 @@ TODO: This section needs to be cleaned up and expanded upon
 
 This section provides a step-by-step guide on how to run the demonstration.
 
+To get the url for all of these projects reference perform the following actions with the oc client in the appropriate projects
+	a. oc project ${project name}
+	b. oc get routes	
+- Jenkins, Gogs, Business Central and Nexus all live in the ci project
+- The application lives in coolstore-bdd-dev, and coolstore-bdd-prod
+- Business Central will be at the {route}/business-central, all other apps live at the root of the url
+
+Username/Passwords
+	a. Jenkins
+		- username: admin
+		- password: password
+	b. Business Central
+		- usernam: brmsuser
+		- password: redhat#1
+	c. Gogs
+		- username: gogs
+		- password: bddgogs
+
+Setup previewers
+1. Go to jenkins and trigger a build for both the rules and the ui application (better to do them one at a time if running in the CDK).
+2. Go into the jobs and click the promote to production button for the currently in progress jobs.
+
+
 1. Describe the application and use case.
 	a. Discuss the basic architecture of the application.
 	b. Mention how the application talks to BPMS.
-2. Show the application up and running in OpenShift Enterprise.
-3. Go over the Jenkins pipelines.
+2. Show the application up and running in OpenShift Enterprise. (Show both dev and prod)
+3. Change the business requirments.
+        a. Open up Business Central and log in
+	b. Update the cost of shipping for orders under $25 in the BDD scenarions only.
+		- To update the files you have to go to Administration view.  There is no editor for feature files in authoring view.
+		- The file is located at coolstore/src/test/resources/features/ShippingCost.txt
+		- You will want to update the first two scenarios
+		- Save the file
+	c. Switch the business logic to match the change in the scenario
+        	- Switch to the authoring mode and go to the guided decision table called ShippingRules
+		- Update the first row and change the value to be one penny off from the value specified in the scenario
+		- Tell the observer of the demo that we are mimicking a developer or rules analysts mistake and we are going to show how a build catches it
+		- Save the file
+		- Click open project editor in the upper right hand corner
+		- Update the version 
+		- Save this file to trigger a build (Only a change to the pom will trigger a build by pushing to the deployments branch in gogs)	
+4. Go over the Jenkins pipelines.
 	a. Show how Jenkins lets us deploy the application to environments.
-	b. Highlight that the build is currently stable.
-4. Change the business requirments.
-	a. Update the cost of shipping for orders under $25 in the BDD scenarions only.
-	b. Commit and push the new scenarios.
-	c. Watch the Jenkins builds now fail.
-5. Change the logic.
+	b. Explain each stage of the rules pipeline
+	c. Wait for build to fail
+	d. Enter the failed build and show the cucumber jvm reports that show the failed scenarios
+	e. Go to dev and prod for the app and show how the logic is now different and that dev is wrong
+	f. Highlight that since the build failed it does not allow you to promote this bad logic to production
+5. Fix the logic.
 	a. Now that we know our application doesn't match our requirements, fix the application.
-	b. Commit and push the changes.
-	c. Watch Jenkins pass.
-6. Once Jenkins is all green, we can deploy the application to higher environments (System testing, Production, etc.).
+		- Repeat steps 3.c except make the value correct this time
+	b. Watch Jenkins pass.
+	c. Show the cucumber reports passing
+	d. Go to dev and show the correct logic
+	e. Promote to prod from the pipeline
+	f. Show prod has the new rules

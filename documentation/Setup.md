@@ -18,7 +18,7 @@ Due to the number of components found within this demonstration, the following h
 
 ## Obtaining JBoss BRMS
 
-To build the JBoss BRMS container, the JBoss BRMS 6.3 deployable for JBoss Enterprise Application Platform (*jboss-brms-6.3.0.GA-deployable-eap6.x*) must be available. The software can be obtained from the Red Hat Customer Portal and placed in the `infrastructure/business-central/support` folder. Additional information can be found in the [README](infrastructure/business-central/support/README.md) within this folder.
+To build the JBoss BRMS container, the JBoss BRMS 6.3 deployable for JBoss Enterprise Application Platform (*jboss-brms-6.3.0.GA-deployable-eap6.x*) must be available. The software can be obtained from the Red Hat Customer Portal and placed in the `infrastructure/business-central/support` folder. Additional information can be found in the [README](../infrastructure/business-central/support/README.md) within this folder.
 
 ## Installing and Configuring the CDK
 
