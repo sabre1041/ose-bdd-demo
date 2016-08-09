@@ -63,7 +63,7 @@ node('ose-agent') {
             processStageResult()
         }
         
-    stage 'Acceptance Test'
+    stage 'Automated Acceptance Test'
            
         try {
             
@@ -83,7 +83,7 @@ node('ose-agent') {
    
             step([$class: 'CucumberReportPublisher', fileExcludePattern: '', fileIncludePattern: '', ignoreFailedTests: false, jenkinsBasePath: '', jsonReportDirectory: 'coolstore/target', missingFails: false, parallelTesting: false, pendingFails: false, skippedFails: false, undefinedFails: false])
 
-            step([$class: 'CukedoctorPublisher', numbered: true, sectAnchors: true, toc: 'RIGHT', format: 'HTML', title: 'Living Documentation'])
+            step([$class: 'CukedoctorPublisher', numbered: true, sectAnchors: true, toc: 'RIGHT', format: 'HTML', title: 'Living Documentation', featuresDir: 'coolstore/target'])
                 
         }
         catch(e) {
