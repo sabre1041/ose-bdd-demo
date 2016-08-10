@@ -32,8 +32,8 @@
       <targets>dsl/*</targets>
       <usingScriptText>false</usingScriptText>
       <ignoreExisting>false</ignoreExisting>
-      <removedJobAction>IGNORE</removedJobAction>
-      <removedViewAction>IGNORE</removedViewAction>
+      <removedJobAction>DELETE</removedJobAction>
+      <removedViewAction>DELETE</removedViewAction>
       <lookupStrategy>JENKINS_ROOT</lookupStrategy>
       <additionalClasspath></additionalClasspath>
     </javaposse.jobdsl.plugin.ExecuteDslScripts>

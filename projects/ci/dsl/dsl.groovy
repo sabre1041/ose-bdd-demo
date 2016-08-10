@@ -1,10 +1,10 @@
-def jobs = [
+def bddJobs = [
     [ name: 'coolstore-app-pipeline', gitUrl: 'http://gogs:3000/gogs/coolstore-app', gitBranch: 'master', openShiftHost: 'kubernetes.default.svc.cluster.local', openShiftPort: "443", openShiftSourceProject: 'coolstore-bdd-dev', openShiftSourceApplication: 'coolstore-app', openShiftDestinationProject: 'coolstore-bdd-prod', openShiftDestinationApplication: 'coolstore-app'],
     [ name: 'coolstore-test-harness-pipeline', gitUrl: 'http://gogs:3000/gogs/coolstore-test-harness.git', gitBranch: 'master', openShiftHost: 'kubernetes.default.svc.cluster.local', openShiftPort: "443", openShiftSourceProject: 'coolstore-bdd-dev', openShiftSourceApplication: 'coolstore-rules', openShiftDestinationProject: 'coolstore-bdd-prod', openShiftDestinationApplication: 'coolstore-rules', kieServer: 'http://coolstore-rules.coolstore-bdd-dev.svc.cluster.local:8080/kie-server/services/rest/server'],
     [ name: 'coolstore-rules-pipeline', gitUrl: 'http://gogs:3000/gogs/coolstore-rules.git', gitBranch: 'deployments', openShiftHost: 'kubernetes.default.svc.cluster.local', openShiftPort: "443", openShiftSourceProject: 'coolstore-bdd-dev', openShiftSourceApplication: 'coolstore-rules', openShiftDestinationProject: 'coolstore-bdd-prod', openShiftDestinationApplication: 'coolstore-rules', kieServer: 'http://coolstore-rules.coolstore-bdd-dev.svc.cluster.local:8080/kie-server/services/rest/server']
 ]
 
-jobs.each { job ->
+bddJobs.each { job ->
 
     workflowJob(job.name) {
         parameters {
@@ -36,5 +36,42 @@ jobs.each { job ->
             scriptPath "Jenkinsfile"
         }    
       }
+    }
+}
+
+
+listView('Coolstore') {
+
+    jobs {
+        bddJobs.each { job ->
+           name(job.name)
+        }
+    }
+
+    columns {
+        status()
+        weather()
+        name()
+        lastSuccess()
+        lastFailure()
+        lastDuration()
+        buildButton()
+    }
+}
+
+listView("Ops") {
+
+    jobs {
+        name("bdd-coolstore-dsl")
+    }
+
+    columns {
+        status()
+        weather()
+        name()
+        lastSuccess()
+        lastFailure()
+        lastDuration()
+        buildButton()
     }
 }
