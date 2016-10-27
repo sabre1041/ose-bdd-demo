@@ -10,7 +10,7 @@ git push origin master:master
 
 echo "Checking to see if pom changed during commit"
 
-git show --pretty="" --name-only HEAD | grep 'pom\.xml' &> /dev/null
+git diff --pretty="" --name-only master origin/master | grep 'pom\.xml' &> /dev/null
 
 if [ $? == 0 ]; then
 
