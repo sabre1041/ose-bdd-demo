@@ -85,7 +85,7 @@ public class CoolstoreSetps {
 
 	@Then("^the shipping cost is (\\d+.\\d+)$")
 	public void the_shipping_cost_is(double shippingCost) throws Throwable {
-		Assert.assertTrue(shoppingCart.getShippingTotal().doubleValue() == shippingCost);
+		Assert.assertTrue(String.format("The expected cost was $%s, but the actual cost was $%s", shoppingCart.getShippingTotal().doubleValue()  , shippingCost ),shoppingCart.getShippingTotal().doubleValue() == shippingCost);
 	}
 
 	@Then("^there is no shipping promotion applied$")
