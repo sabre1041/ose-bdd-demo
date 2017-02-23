@@ -219,7 +219,7 @@ oc build-logs -n ${OSE_CI_PROJECT} -f nexus-1
 echo
 echo "Deploying PostgreSQL for Gogs..."
 echo
-oc process -f $SCRIPT_BASE_DIR/support/templates/infrastructure/postgresql-persistent.json -v=POSTGRESQL_DATABASE=$POSTGRESQL_DATABASE,POSTGRESQL_USER=$POSTGRESQL_USER,POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD  | oc create -n $OSE_CI_PROJECT -f- >/dev/null 2>&1
+oc process -f $SCRIPT_BASE_DIR/support/templates/infrastructure/postgresql-persistent.json -v=POSTGRESQL_DATABASE=$POSTGRESQL_DATABASE POSTGRESQL_USER=$POSTGRESQL_USER POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD  | oc create -n $OSE_CI_PROJECT -f- >/dev/null 2>&1
 
 wait_for_endpoint_registration "postgresql" "$OSE_CI_PROJECT"
 
@@ -383,7 +383,7 @@ echo
 echo "Creating Coolstore App in ${OSE_BDD_DEV_PROJECT}..."
 echo
 # Process app-store template
-oc process -v KIE_SERVER_USER=${KIE_SERVER_USER},KIE_SERVER_PASSWORD=${KIE_SERVER_PASSWORD} -f "${SCRIPT_BASE_DIR}/support/templates/apps/coolstore-bdd-app.json" | oc create -n ${OSE_BDD_DEV_PROJECT} -f -
+oc process -v KIE_SERVER_USER=${KIE_SERVER_USER} KIE_SERVER_PASSWORD=${KIE_SERVER_PASSWORD} -f "${SCRIPT_BASE_DIR}/support/templates/apps/coolstore-bdd-app.json" | oc create -n ${OSE_BDD_DEV_PROJECT} -f -
 
 echo
 echo "Waiting for App build to begin..."
@@ -397,7 +397,7 @@ echo
 echo "Creating Coolstore Rules in ${OSE_BDD_DEV_PROJECT}..."
 echo
 # Process rules template
-oc process -v KIE_SERVER_USER=${KIE_SERVER_USER},KIE_SERVER_PASSWORD=${KIE_SERVER_PASSWORD} -f "${SCRIPT_BASE_DIR}/support/templates/apps/coolstore-bdd-rules.json" | oc create -n ${OSE_BDD_DEV_PROJECT} -f -
+oc process -v KIE_SERVER_USER=${KIE_SERVER_USER} KIE_SERVER_PASSWORD=${KIE_SERVER_PASSWORD} -f "${SCRIPT_BASE_DIR}/support/templates/apps/coolstore-bdd-rules.json" | oc create -n ${OSE_BDD_DEV_PROJECT} -f -
 
 echo
 echo "Waiting for Rules build to begin..."
@@ -423,12 +423,12 @@ echo
 echo "Creating Coolstore App in ${OSE_BDD_PROD_PROJECT}..."
 echo
 # Process app-store template
-oc process -v KIE_SERVER_USER=${KIE_SERVER_USER},KIE_SERVER_PASSWORD=${KIE_SERVER_PASSWORD} -f "${SCRIPT_BASE_DIR}/support/templates/apps/coolstore-bdd-app-deploy.json" | oc create -n ${OSE_BDD_PROD_PROJECT} -f -
+oc process -v KIE_SERVER_USER=${KIE_SERVER_USER} KIE_SERVER_PASSWORD=${KIE_SERVER_PASSWORD} -f "${SCRIPT_BASE_DIR}/support/templates/apps/coolstore-bdd-app-deploy.json" | oc create -n ${OSE_BDD_PROD_PROJECT} -f -
 
 echo
 echo "Creating Coolstore Prod in ${OSE_BDD_PROD_PROJECT}..."
 echo
-oc process -v KIE_SERVER_USER=${KIE_SERVER_USER},KIE_SERVER_PASSWORD=${KIE_SERVER_PASSWORD} -f "${SCRIPT_BASE_DIR}/support/templates/apps/coolstore-bdd-rules-deploy.json" | oc create -n ${OSE_BDD_PROD_PROJECT} -f -
+oc process -v KIE_SERVER_USER=${KIE_SERVER_USER} KIE_SERVER_PASSWORD=${KIE_SERVER_PASSWORD} -f "${SCRIPT_BASE_DIR}/support/templates/apps/coolstore-bdd-rules-deploy.json" | oc create -n ${OSE_BDD_PROD_PROJECT} -f -
 
 
 oc policy add-role-to-user edit system:serviceaccount:${OSE_BDD_PROD_PROJECT}:default -n ${OSE_BDD_DEV_PROJECT}
